@@ -1,0 +1,15 @@
+# Flatcar QEMU images and EFI files
+*.img
+*.qcow2
+
+# Generated Ignition configs
+*.ign
+
+# Kubernetes sysext
+*.raw
+
+# OpenTofu / Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup

@@ -1,0 +1,62 @@
+variant: flatcar
+version: 1.1.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIcw6V9/L4OqPFNC/xoKQSyAMI5KgvIjkYGoDypRPiiJ janbronicki@fedora
+    - name: demo
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIcw6V9/L4OqPFNC/xoKQSyAMI5KgvIjkYGoDypRPiiJ janbronicki@fedora
+      groups:
+        - docker
+        - sudo
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: flatcar-demo
+    - path: /opt/bin/welcome.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          echo "--- flatcar demo info ---"
+          echo "host: $(hostname)"
+          echo "date: $(date)"
+          docker info --format 'docker: {{.ServerVersion}}'
+systemd:
+  units:
+    - name: hello-world.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Docker Hello World on Boot
+        After=docker.service
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/docker run --rm --name hello-world hello-world
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: nginx-demo.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Nginx Demo Container
+        After=docker.service
+        Requires=docker.service
+
+        [Service]
+        Restart=always
+        ExecStartPre=-/usr/bin/docker rm -f nginx-demo
+        ExecStart=/usr/bin/docker run --rm --name nginx-demo -p 8080:80 nginx:alpine
+        ExecStop=/usr/bin/docker stop nginx-demo
+
+        [Install]
+        WantedBy=multi-user.target

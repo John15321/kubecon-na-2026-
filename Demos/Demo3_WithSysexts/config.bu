@@ -1,0 +1,60 @@
+variant: flatcar
+version: 1.1.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIcw6V9/L4OqPFNC/xoKQSyAMI5KgvIjkYGoDypRPiiJ janbronicki@fedora
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: flatcar-k8s-demo
+    - path: /etc/extensions/kubernetes.raw
+      mode: 0644
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.33.2-x86-64.raw
+# --- if no internet, comment out the kubernetes.raw file above and use
+#     make scp-sysext to copy it in manually after boot ---
+systemd:
+  units:
+    - name: kubeadm-init.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Bootstrap single-node k8s cluster
+        Requires=containerd.service
+        After=containerd.service
+        After=network-online.target
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/kubeadm init --pod-network-cidr=10.244.0.0/16
+        ExecStart=/usr/bin/mkdir -p /home/core/.kube
+        ExecStart=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: k8s-setup.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Untaint node, install flannel, deploy nginx
+        Requires=kubeadm-init.service
+        After=kubeadm-init.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        Environment=KUBECONFIG=/etc/kubernetes/admin.conf
+        ExecStart=/usr/bin/kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+        ExecStart=/usr/bin/kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+        ExecStart=/usr/bin/kubectl create deployment hello --image=nginx --replicas=3
+
+        [Install]
+        WantedBy=multi-user.target
