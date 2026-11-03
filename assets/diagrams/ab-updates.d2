@@ -1,0 +1,49 @@
+vars: {
+  d2-config: {
+    pad: 36
+    sketch: false
+  }
+}
+
+classes: {
+  running: {
+    style: {
+      fill: "#09BAC8"
+      stroke: "#12172B"
+      stroke-width: 3
+      font-color: "#12172B"
+      font-size: 36
+      border-radius: 14
+      shadow: true
+      bold: true
+    }
+  }
+  staging: {
+    style: {
+      fill: "#FFFFFF"
+      stroke: "#12172B"
+      stroke-width: 3
+      stroke-dash: 6
+      font-color: "#12172B"
+      font-size: 36
+      border-radius: 14
+      shadow: true
+    }
+  }
+  flip: {
+    style: {
+      stroke: "#12172B"
+      stroke-width: 5
+      font-color: "#12172B"
+      font-size: 28
+      bold: true
+    }
+  }
+}
+
+direction: right
+
+a: "Partition A\nrunning" { class: running }
+b: "Partition B\nstaging next image" { class: staging }
+
+a <-> b: "atomic flip on reboot" { class: flip }

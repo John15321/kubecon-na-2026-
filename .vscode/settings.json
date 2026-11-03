@@ -1,0 +1,24 @@
+{
+    "markdown.marp.themes": [
+        "./themes/flatcar/base.css",
+        "./themes/flatcar/dark.css",
+        "./themes/flatcar/sidebar.css",
+        "./themes/flatcar.css"
+    ],
+    "markdown.marp.enableHtml": true,
+    "markdown.marp.html": "all",
+    "markdown.preview.breaks": true,
+    "files.associations": {
+        "slides.md": "markdown"
+    },
+    "files.exclude": {
+        "node_modules": true,
+        "build": false,
+        "artifacts": false
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/build/**": true,
+        "**/artifacts/**": true
+    }
+}

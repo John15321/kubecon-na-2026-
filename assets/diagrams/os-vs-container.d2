@@ -1,0 +1,103 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  cbox: {
+    style: {
+      fill: "#12172B"
+      stroke: "#12172B"
+      stroke-width: 3
+      font-color: "#FFFFFF"
+      font-size: 34
+      bold: true
+      border-radius: 10
+      shadow: true
+    }
+  }
+  obox: {
+    style: {
+      fill: "#09BAC8"
+      stroke: "#12172B"
+      stroke-width: 3
+      font-color: "#12172B"
+      font-size: 34
+      bold: true
+      border-radius: 10
+      shadow: true
+    }
+  }
+  row: {
+    style: {
+      fill: "transparent"
+      stroke: "transparent"
+    }
+  }
+  head: {
+    style: {
+      fill: "transparent"
+      stroke: "transparent"
+      font-color: "#12172B"
+      font-size: 34
+      bold: true
+    }
+  }
+  arrow: {
+    style: {
+      stroke: "#12172B"
+      stroke-width: 4
+      font-color: "#12172B"
+      font-size: 22
+    }
+  }
+}
+
+table: "" {
+  class: row
+  grid-columns: 1
+  grid-gap: 14
+
+  r0: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 24
+    a: "" { class: row; width: 220; height: 60 }
+    b: "Containers" { class: head; width: 400; height: 60 }
+    c: "Operating System" { class: head; width: 400; height: 60 }
+  }
+  r1: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 24
+    a: "Recipe" { class: head; width: 220; height: 100 }
+    b: "Dockerfile" { class: cbox; width: 400; height: 100 }
+    c: "Butane / Ignition" { class: obox; width: 400; height: 100 }
+  }
+  r2: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 24
+    a: "Image" { class: head; width: 220; height: 100 }
+    b: "Docker image\nversioned, immutable" { class: cbox; width: 400; height: 100 }
+    c: "Flatcar image\nversioned, immutable" { class: obox; width: 400; height: 100 }
+  }
+  r3: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 24
+    a: "Instance" { class: head; width: 220; height: 100 }
+    b: "Container\ndisposable" { class: cbox; width: 400; height: 100 }
+    c: "Node\nreprovisionable" { class: obox; width: 400; height: 100 }
+  }
+  r4: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 24
+    a: "Update" { class: head; width: 220; height: 100 }
+    b: "New image tag\nreplace, don't patch" { class: cbox; width: 400; height: 100 }
+    c: "New OS release\nA/B swap, don't patch" { class: obox; width: 400; height: 100 }
+  }
+}

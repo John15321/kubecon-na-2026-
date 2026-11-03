@@ -1,0 +1,39 @@
+vars: {
+  d2-config: {
+    pad: 36
+    sketch: false
+  }
+}
+
+classes: {
+  step: {
+    style: {
+      fill: "transparent"
+      stroke: "#12172B"
+      stroke-width: 3
+      font-color: "#12172B"
+      font-size: 36
+      border-radius: 14
+      shadow: false
+      bold: true
+    }
+  }
+  arrow: {
+    style: {
+      stroke: "#09BAC8"
+      stroke-width: 6
+      font-color: "#12172B"
+      font-size: 24
+      bold: true
+    }
+  }
+}
+
+direction: down
+
+config: "Butane YAML\n(Declarative config)" { class: step }
+substrate: "Cloud · VM · Bare Metal" { class: step }
+containers: "Containers (Podman, K8s, systemd)" { class: step }
+
+config -> substrate: "provisions" { class: arrow }
+substrate -> containers: "runs" { class: arrow }

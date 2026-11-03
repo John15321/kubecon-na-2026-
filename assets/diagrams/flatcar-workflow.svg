@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1146 246" font-family="'Inter', system-ui, sans-serif">
+  <style>
+    .box    { fill: #FFFFFF; stroke: #12172B; stroke-width: 3; }
+    .shadow { fill: #09BAC8; }
+    .title  { fill: #12172B; font-weight: 700; text-anchor: middle; }
+    .sub    { fill: #12172B; font-weight: 500; text-anchor: middle; }
+    .arrow  { stroke: #09BAC8; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+
+  <rect class="shadow" x="26"  y="26" width="300" height="200" rx="14"/>
+  <rect class="box"    x="20"  y="20" width="300" height="200" rx="14"/>
+  <text class="title"  x="170" y="115" font-size="30">Butane YAML</text>
+  <text class="sub"    x="170" y="150" font-size="20">Declarative config</text>
+
+  <path class="arrow" d="M 340 120 L 400 120 M 384 106 L 400 120 L 384 134"/>
+
+  <rect class="shadow" x="426" y="26" width="300" height="200" rx="14"/>
+  <rect class="box"    x="420" y="20" width="300" height="200" rx="14"/>
+  <text class="title"  x="570" y="115" font-size="22">Cloud · VM · Bare Metal</text>
+  <text class="sub"    x="570" y="150" font-size="20">Provisions</text>
+
+  <path class="arrow" d="M 740 120 L 800 120 M 784 106 L 800 120 L 784 134"/>
+
+  <rect class="shadow" x="826" y="26" width="300" height="200" rx="14"/>
+  <rect class="box"    x="820" y="20" width="300" height="200" rx="14"/>
+  <text class="title"  x="970" y="115" font-size="30">Containers</text>
+  <text class="sub"    x="970" y="150" font-size="20">Your runtime of choice</text>
+</svg>

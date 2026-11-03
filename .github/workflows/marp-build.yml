@@ -1,0 +1,77 @@
+name: Build Marp Slides
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Build slides and gather artifacts
+        run: |
+          # Make scripts executable
+          chmod +x scripts/*.sh
+
+          # GitHub runners don't have Podman; use the native (host Node) build path.
+          make native-clean
+          make native-artifacts
+
+          # List generated files for debugging
+          echo "Generated artifacts:"
+          ls -la artifacts/ || echo "No artifacts directory"
+          ls -la build/ || echo "No build directory"
+
+          if [ -f artifacts/slides.pdf ]; then
+            echo "✅ Build artifacts ready for upload"
+            echo "📄 Slides PDF: $(ls -lh artifacts/slides.pdf | awk '{print $5}')"
+          else
+            echo "❌ No PDF artifacts found"
+            exit 1
+          fi
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: marp-slides-pdf-${{ github.run_number }}
+          path: artifacts/*.pdf
+          retention-days: 30
+
+      - name: Create Release and Upload Assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.pdf
+          name: "Marp Slides ${{ github.ref_name }}"
+          body: |
+            ## Marp Slides Release ${{ github.ref_name }}
+
+            📅 **Generated**: ${{ github.event.head_commit.timestamp }}
+            🔗 **Commit**: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+
+            ### 📊 Build Information
+            - **Build Number**: ${{ github.run_number }}
+            - **Workflow**: ${{ github.workflow }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,110 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  locked: {
+    style: {
+      fill: "#09BAC8"
+      stroke: "#12172B"
+      stroke-width: 3
+      font-color: "#12172B"
+      font-size: 30
+      bold: true
+      border-radius: 8
+      shadow: true
+    }
+  }
+  open: {
+    style: {
+      fill: "#FFFFFF"
+      stroke: "#12172B"
+      stroke-width: 3
+      stroke-dash: 6
+      font-color: "#12172B"
+      font-size: 30
+      bold: true
+      border-radius: 8
+    }
+  }
+  row: {
+    style: {
+      fill: "transparent"
+      stroke: "transparent"
+    }
+  }
+  legend: {
+    style: {
+      fill: "transparent"
+      stroke: "transparent"
+      font-color: "#12172B"
+      font-size: 26
+      bold: true
+    }
+  }
+}
+
+page: "" {
+  class: row
+  grid-columns: 1
+  grid-gap: 12
+
+  os: "Operating System" {
+    style: {
+      fill: "#F3F6FA"
+      stroke: "#12172B"
+      stroke-width: 5
+      font-color: "#12172B"
+      font-size: 40
+      bold: true
+      border-radius: 16
+    }
+    wall: "" {
+      class: row
+      grid-columns: 1
+      grid-gap: 0
+
+      w1: "" {
+        class: row
+        grid-rows: 1
+        grid-gap: 26
+        pods: "Workloads\ncontainers, pods" { class: open ; width: 437; height: 90 }
+        kubelet: "Kubernetes\nkubelet state" { class: open ; width: 437; height: 90 }
+      }
+      w2: "" {
+        class: row
+        grid-rows: 1
+        grid-gap: 26
+        etc: "Config\n/etc, set by Ignition" { class: open ; width: 283; height: 90 }
+        var: "Data\n/var" { class: open ; width: 283; height: 90 }
+        home: "Users\n/home" { class: open ; width: 283; height: 90 }
+      }
+      r1: "" {
+        class: row
+        grid-rows: 1
+        grid-gap: 26
+        systemd: "systemd" { class: locked ; width: 283; height: 90 }
+        runtime: "Container runtime" { class: locked ; width: 283; height: 90 }
+        sysext: "sysexts\noptional add-ons" { class: locked ; width: 283; height: 90 }
+      }
+      r2: "" {
+        class: row
+        grid-rows: 1
+        grid-gap: 26
+        usr: "/usr\nthe whole OS as one read-only image, dm-verity verified" { class: locked ; width: 900; height: 90 }
+      }
+      r3: "" {
+        class: row
+        grid-rows: 1
+        grid-gap: 26
+        kernel: "Kernel" { class: locked ; width: 283; height: 90 }
+        initramfs: "initramfs" { class: locked ; width: 283; height: 90 }
+        slots: "A/B slots\nUSR-A, USR-B" { class: locked ; width: 283; height: 90 }
+      }
+    }
+  }
+
+}
