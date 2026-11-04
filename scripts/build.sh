@@ -25,6 +25,10 @@ if [ -n "${D2_CMD}" ] && [ -d assets/diagrams ]; then
         out="${src%.d2}.svg"
         echo "🖼️  d2: ${src} → ${out}"
         "${D2_CMD}" --theme 0 "$src" "$out" > /dev/null
+        # Lift connection labels above their arrows instead of over them.
+        if command -v python3 > /dev/null 2>&1; then
+            python3 scripts/d2-labels-above.py "$out"
+        fi
     done
 fi
 

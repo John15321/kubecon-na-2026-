@@ -369,6 +369,102 @@ No login. No post-boot setup. The machine came up already doing its job.
 
 ---
 
+<!-- _class: sidebar -->
+
+# Immutable by Design
+
+- **First boot** provisions from config. After that: the base OS doesn't change.
+- The OS is **read-only** and **dm-verity protected**.
+- **No package updates**: the entire OS updates as one unit.
+- Same config + same base image = **identical machine every time**.
+- **sysexts** for optional add-ons.
+
+---
+
+# What is Immutable?
+
+<img style="display: block; margin: 0 auto; height: 540px; max-width: 100%; object-fit: contain" src="assets/diagrams/immutable-layers.svg" alt="Block diagram: writable workloads, config and data on top of the read-only, dm-verity protected OS image, sysexts and boot layer">
+
+<div class="pin-br" style="display: flex; gap: 6px; bottom: 22px; right: 80px; font-size: 13px; font-weight: 700">
+  <span style="border: 2px dashed #12172B; border-radius: 4px; padding: 2px 10px; background: #fff; color: #12172B">Writable: yours</span>
+  <span style="border: 2px solid #12172B; border-radius: 4px; padding: 2px 10px; background: #09BAC8; color: #12172B">Read-only: Flatcar's</span>
+</div>
+
+---
+
+<!-- _class: sidebar -->
+
+# A/B Updates
+
+<div class="ab-slide">
+<div class="ab-wrap">
+  <div class="ab-stack">
+    <div class="ab-card">
+      <div class="ab-title"><span class="ab-num">1</span>Fresh install</div>
+      <div class="ab-slots">
+        <div class="ab-slot active"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
+        <div class="ab-slot passive"><span class="ab-label">B</span><span class="ab-ver">1.2.3</span></div>
+      </div>
+      <div class="ab-caption">Image ships both slots identical. Only true at first boot.</div>
+    </div>
+    <div class="ab-card">
+      <div class="ab-title"><span class="ab-num">2</span>Update staged</div>
+      <div class="ab-slots">
+        <div class="ab-slot active"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
+        <div class="ab-slot staged"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
+      </div>
+      <div class="ab-caption">New image written over the passive slot. No downtime.</div>
+    </div>
+    <div class="ab-card">
+      <div class="ab-title"><span class="ab-num">3</span>Reboot swaps</div>
+      <div class="ab-slots">
+        <div class="ab-slot passive"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
+        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
+      </div>
+      <div class="ab-caption">Boot flips to B. If it fails, reboot back to A at 1.2.3.</div>
+    </div>
+    <div class="ab-card">
+      <div class="ab-title"><span class="ab-num">4</span>Steady running</div>
+      <div class="ab-slots">
+        <div class="ab-slot passive"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
+        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
+      </div>
+      <div class="ab-caption">B live. A untouched: it's your rollback target.</div>
+    </div>
+    <div class="ab-card">
+      <div class="ab-title"><span class="ab-num">5</span>Next update</div>
+      <div class="ab-slots">
+        <div class="ab-slot staged"><span class="ab-label">A</span><span class="ab-ver">1.2.5</span></div>
+        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
+      </div>
+      <div class="ab-caption">1.2.5 overwrites the old 1.2.3 on A. Next reboot: A active, B rollback.</div>
+    </div>
+  </div>
+  <div class="ab-cycle-icon" aria-hidden="true">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 50 12 A 38 38 0 1 1 12 50" fill="none" stroke="#12172B" stroke-width="7" stroke-linecap="round"/><polygon points="12,32 3,52 21,52" fill="#12172B"/></svg>
+  </div>
+</div>
+<div class="ab-cycle">↺ The passive slot is <strong>never auto-synced</strong>. It's your rollback until the next update lands.</div>
+</div>
+
+---
+
+
+# Channels
+
+<img style="display: block; margin: 0 auto 16px; max-width: 100%; max-height: 240px; object-fit: contain" src="assets/logos/external/other/flatcar-release-channels.png" alt="Alpha to Beta to Stable release flow">
+
+- **Alpha**: fully tested, may have incomplete features. Developers.
+- **Beta**: production-ready. Canary alongside stable.
+- **Stable**: widespread production. Promoted from beta.
+- **LTS**: slower-moving track for environments that need it.
+
+<div class="callout">
+Every commit runs the full test suite: unit, integration, and product tests across every supported cloud. By the time a version ships, even <strong>Alpha</strong>, it's been through hundreds of runs.
+</div>
+
+---
+
 <!-- _class: demo -->
 
 <p class="demo-kicker">Live demo · 01</p>
@@ -464,29 +560,6 @@ While it boots: the VM runs with -snapshot, so every run is a genuine first boot
 
 Payoff: curl localhost:8080 from the laptop. No login, no setup, the machine came up already doing its job. Point back at the "It came up serving" slide.
 -->
-
----
-
-<!-- _class: sidebar -->
-
-# Immutable by Design
-
-- **First boot** provisions from config. After that: the base OS doesn't change.
-- The OS is **read-only** and **dm-verity protected**.
-- **No package updates**: the entire OS updates as one unit.
-- Same config + same base image = **identical machine every time**.
-- **sysexts** for optional add-ons.
-
----
-
-# What is Immutable?
-
-<img style="display: block; margin: 0 auto; height: 540px; max-width: 100%; object-fit: contain" src="assets/diagrams/immutable-layers.svg" alt="Block diagram: writable workloads, config and data on top of the read-only, dm-verity protected OS image, sysexts and boot layer">
-
-<div class="pin-br" style="display: flex; gap: 6px; bottom: 22px; right: 80px; font-size: 13px; font-weight: 700">
-  <span style="border: 2px dashed #12172B; border-radius: 4px; padding: 2px 10px; background: #fff; color: #12172B">Writable: yours</span>
-  <span style="border: 2px solid #12172B; border-radius: 4px; padding: 2px 10px; background: #09BAC8; color: #12172B">Read-only: Flatcar's</span>
-</div>
 
 ---
 
@@ -615,79 +688,6 @@ Optional: untaint the control plane and apply app-demo.yaml, then curl localhost
 
 Fallback: asciinema play demo.cast in this folder.
 -->
-
----
-
-<!-- _class: sidebar -->
-
-# A/B Updates
-
-<div class="ab-slide">
-<div class="ab-wrap">
-  <div class="ab-stack">
-    <div class="ab-card">
-      <div class="ab-title"><span class="ab-num">1</span>Fresh install</div>
-      <div class="ab-slots">
-        <div class="ab-slot active"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
-        <div class="ab-slot passive"><span class="ab-label">B</span><span class="ab-ver">1.2.3</span></div>
-      </div>
-      <div class="ab-caption">Image ships both slots identical. Only true at first boot.</div>
-    </div>
-    <div class="ab-card">
-      <div class="ab-title"><span class="ab-num">2</span>Update staged</div>
-      <div class="ab-slots">
-        <div class="ab-slot active"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
-        <div class="ab-slot staged"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
-      </div>
-      <div class="ab-caption">New image written over the passive slot. No downtime.</div>
-    </div>
-    <div class="ab-card">
-      <div class="ab-title"><span class="ab-num">3</span>Reboot swaps</div>
-      <div class="ab-slots">
-        <div class="ab-slot passive"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
-        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
-      </div>
-      <div class="ab-caption">Boot flips to B. If it fails, reboot back to A at 1.2.3.</div>
-    </div>
-    <div class="ab-card">
-      <div class="ab-title"><span class="ab-num">4</span>Steady running</div>
-      <div class="ab-slots">
-        <div class="ab-slot passive"><span class="ab-label">A</span><span class="ab-ver">1.2.3</span></div>
-        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
-      </div>
-      <div class="ab-caption">B live. A untouched: it's your rollback target.</div>
-    </div>
-    <div class="ab-card">
-      <div class="ab-title"><span class="ab-num">5</span>Next update</div>
-      <div class="ab-slots">
-        <div class="ab-slot staged"><span class="ab-label">A</span><span class="ab-ver">1.2.5</span></div>
-        <div class="ab-slot active"><span class="ab-label">B</span><span class="ab-ver">1.2.4</span></div>
-      </div>
-      <div class="ab-caption">1.2.5 overwrites the old 1.2.3 on A. Next reboot: A active, B rollback.</div>
-    </div>
-  </div>
-  <div class="ab-cycle-icon" aria-hidden="true">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 50 12 A 38 38 0 1 1 12 50" fill="none" stroke="#12172B" stroke-width="7" stroke-linecap="round"/><polygon points="12,32 3,52 21,52" fill="#12172B"/></svg>
-  </div>
-</div>
-<div class="ab-cycle">↺ The passive slot is <strong>never auto-synced</strong>. It's your rollback until the next update lands.</div>
-</div>
-
----
-
-
-# Channels
-
-<img style="display: block; margin: 0 auto 16px; max-width: 100%; max-height: 240px; object-fit: contain" src="assets/logos/external/other/flatcar-release-channels.png" alt="Alpha to Beta to Stable release flow">
-
-- **Alpha**: fully tested, may have incomplete features. Developers.
-- **Beta**: production-ready. Canary alongside stable.
-- **Stable**: widespread production. Promoted from beta.
-- **LTS**: slower-moving track for environments that need it.
-
-<div class="callout">
-Every commit runs the full test suite: unit, integration, and product tests across every supported cloud. By the time a version ships, even <strong>Alpha</strong>, it's been through hundreds of runs.
-</div>
 
 ---
 
