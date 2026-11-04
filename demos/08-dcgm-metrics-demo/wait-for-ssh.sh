@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Folders 07, 08, and 09 have no instance of their own. They run on folder
-# 03's instance. This reuses folder 05's SSH key and state
+# 05's instance. This reuses folder 05's SSH key and state
 # (ssh/aws-state.json), waits for sshd, then gives you a prompt to type ssh
 # and this folder's kubectl commands live.
 

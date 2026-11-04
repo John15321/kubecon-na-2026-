@@ -2,7 +2,7 @@
 #
 # Folder 07 runs against folder 05's instance (no infra of its own), so
 # there is no launch pane -- just one SSH pane. It waits for sshd on folder
-# 03's box, then drops you at a prompt to type `ssh` and the vLLM demo
+# 05's box, then drops you at a prompt to type `ssh` and the vLLM demo
 # commands (kubectl apply -f vllm-demo.yaml, the curl, the scale beat) live.
 #
 # Precondition: folder 05 is up and its cluster is Ready with the GPU

@@ -17,6 +17,8 @@
  *   sidebar           navy 33% rail + free-form right pane
  *   sidebar whoami    bio variant of sidebar
  *   quote             navy blockquote slide
+ *   demo              navy hand-off card before a live demo
+ *                     (kicker, "Watch for" list, command box)
  *
  * Marp resolves url() relative to slides.md, not these CSS files,
  * so asset refs are written as `assets/...` (no leading `../`).

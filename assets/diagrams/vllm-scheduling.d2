@@ -1,0 +1,28 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  flatcar: {style: {fill: "#09BAC8"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  hw: {style: {fill: "#E4E8EF"; stroke: "#7A87A0"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  group: {style: {fill: "#F3F6FA"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 30; bold: true; border-radius: 14}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 4; font-color: "#12172B"; font-size: 24}}
+}
+
+direction: right
+
+dep: "Deployment vllm-demo\nlimits: nvidia.com/gpu: 1" {class: yours; width: 380; height: 110}
+dp: "device plugin on the node\nadvertises nvidia.com/gpu: 1" {class: navy; width: 380; height: 110}
+sched: "kube-scheduler" {class: navy; width: 240; height: 100}
+pod: "vLLM pod on the T4\nQwen2.5-0.5B, API on :8000" {class: yours; width: 380; height: 110}
+out: "curl /v1/completions\ngenerated text back" {class: yours; width: 300; height: 110}
+
+dep -> sched: "wants 1" {class: arrow}
+dp -> sched: "has 1" {class: arrow}
+sched -> pod: "bind" {class: arrow}
+pod -> out {class: arrow}

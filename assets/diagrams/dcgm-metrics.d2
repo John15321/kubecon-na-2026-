@@ -1,0 +1,26 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  hw: {style: {fill: "#E4E8EF"; stroke: "#7A87A0"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 4; font-color: "#12172B"; font-size: 24}}
+}
+
+direction: right
+
+a: "Pane A\ncurl loop" {class: yours; width: 220; height: 110}
+vllm: "vLLM pod" {class: yours; width: 220; height: 110}
+gpu: "T4 GPU" {class: hw; width: 200; height: 110}
+dcgm: "dcgm-exporter\nGPU Operator" {class: navy; width: 260; height: 110}
+b: "Pane B\nwatch GPU_UTIL" {class: yours; width: 260; height: 110}
+
+a -> vllm: "requests" {class: arrow}
+vllm -> gpu: "inference" {class: arrow}
+gpu -> dcgm: "every 2s" {class: arrow}
+dcgm -> b: ":9400/metrics" {class: arrow}

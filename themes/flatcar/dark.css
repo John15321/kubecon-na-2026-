@@ -1,6 +1,6 @@
 /* @theme flatcar-dark
  *
- * Dark navy layouts: `lead`, `cover`, `section`, `closing`, `quote`.
+ * Dark navy layouts: `lead`, `cover`, `section`, `closing`, `quote`, `demo`.
  * Shared base rules at top; per-layout positioning blocks below.
  * Imported by the main `flatcar` theme.
  */
@@ -9,32 +9,32 @@
  * Everything identical across the dark layouts goes here.
  * Note: write as `section:is(.foo, .bar)` (no space, no nested `section`)
  * because Marpit auto-prefixes selectors that don't start with `section`. */
-section:is(.lead, .cover, .section, .closing, .quote) {
+section:is(.lead, .cover, .section, .closing, .quote, .demo) {
   background: var(--bg-navy);
   color: var(--paper);
 }
 
 /* Suppress the top title bar, these layouts position h1 themselves. */
-section:is(.lead, .cover, .section, .closing) h1 {
+section:is(.lead, .cover, .section, .closing, .demo) h1 {
   position: static;
   background: transparent;
   background-image: none;
 }
 
 /* Text accents on navy: bold = white, links = cyan, pagination = dim white. */
-section:is(.lead, .cover, .section, .closing, .quote) strong {
+section:is(.lead, .cover, .section, .closing, .quote, .demo) strong {
   color: var(--paper);
   font-weight: 600;
 }
-section:is(.lead, .cover, .section, .closing, .quote) a {
+section:is(.lead, .cover, .section, .closing, .quote, .demo) a {
   color: var(--accent-cyan);
 }
-section:is(.lead, .cover, .section, .closing, .quote)::after {
+section:is(.lead, .cover, .section, .closing, .quote, .demo)::after {
   color: rgba(255,255,255,0.35);
 }
 
 /* Inline code on navy: drop the light pill, blend with surrounding text. */
-section:is(.lead, .cover, .section, .closing, .quote) code {
+section:is(.lead, .cover, .section, .closing, .quote, .demo) code {
   background: transparent;
   color: inherit;
   padding: 0;
@@ -296,3 +296,95 @@ section.quote li {
 }
 section.quote li::before { content: '\2014\00A0'; color: var(--accent-cyan); }
 section.quote li::marker { display: none; color: transparent; }
+
+/* ---------------- DEMO (hand-off to the terminal) ----------------
+ * One per live demo, right after its explain slide:
+ *
+ *   <!-- _class: demo -->
+ *   <p class="demo-kicker">Live demo · 02</p>
+ *   # Title
+ *   <div class="demo-grid">
+ *     <div> <p class="demo-label">Watch for</p> ...list... </div>
+ *     <div class="demo-term"> <span class="demo-path">demos/..</span> <code>$ cmd</code> ... </div>
+ *   </div>
+ */
+section.demo {
+  background-image: url('assets/backgrounds/flatcar-staircase-right.svg');
+  background-repeat: no-repeat;
+  background-position: right -60px bottom -588px;
+  background-size: 75% auto;
+  padding: 64px 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+section.demo p.demo-kicker {
+  margin: 0 0 10px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent-cyan);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* Blinking-free "live" dot. */
+section.demo p.demo-kicker::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #E53935;
+  box-shadow: 0 0 0 5px rgba(229, 57, 53, 0.25);
+}
+section.demo h1 {
+  margin: 0 0 30px 0;
+  padding: 0;
+  color: var(--paper);
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+section.demo .demo-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.3fr;
+  gap: 44px;
+  align-items: start;
+}
+section.demo p.demo-label {
+  margin: 0 0 8px 0;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+section.demo ul { margin: 0; font-size: 26px; line-height: 1.4; }
+section.demo li { margin: 0.35em 0; }
+section.demo .demo-term {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 22px;
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: 0 6px 6px 0;
+  background: #1E2540;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+section.demo .demo-term .demo-path {
+  margin-bottom: 6px;
+  color: var(--accent-cyan);
+  font-family: 'Cascadia Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+section.demo .demo-term code {
+  display: block;
+  color: var(--paper);
+  font-size: 19px;
+  line-height: 1.45;
+  white-space: pre;
+}
+section.demo .demo-term code.c { color: var(--muted); }

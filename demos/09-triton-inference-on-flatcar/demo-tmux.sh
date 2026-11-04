@@ -2,7 +2,7 @@
 #
 # Folder 09 runs against folder 05's instance (no infra of its own), so
 # there is no launch pane -- just one SSH pane. It waits for sshd on folder
-# 03's box, then drops you at a prompt to type `ssh` and the Triton demo
+# 05's box, then drops you at a prompt to type `ssh` and the Triton demo
 # commands live:
 #   kubectl apply -f triton-demo.yaml   (staged on the node by folder 05's
 #                                        Ignition -- server + in-cluster

@@ -1,0 +1,25 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  hw: {style: {fill: "#E4E8EF"; stroke: "#7A87A0"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 4; font-color: "#12172B"; font-size: 24}}
+}
+
+direction: right
+
+job: "Job triton-classify\nimage to 224x224x3 tensor" {class: yours; width: 380; height: 120}
+svc: "Service\ntriton-demo:8000" {class: navy; width: 260; height: 120}
+srv: "Triton server\nDenseNet-121, ONNX" {class: yours; width: 300; height: 120}
+gpu: "T4 GPU" {class: hw; width: 180; height: 120}
+
+job -> svc: "infer" {class: arrow}
+svc -> srv {class: arrow}
+srv -> gpu {class: arrow}
+srv -> job: "class 258: Samoyed" {class: arrow}

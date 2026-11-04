@@ -1,0 +1,45 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  flatcar: {style: {fill: "#09BAC8"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  hw: {style: {fill: "#E4E8EF"; stroke: "#7A87A0"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  row: {style: {fill: transparent; stroke: transparent}}
+}
+
+stack: "" {
+  class: row
+  grid-columns: 1
+  grid-gap: 12
+
+  wl: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 20
+    llm: "vLLM, Triton\nyour GPU workloads" {class: yours; width: 540; height: 96}
+    k8s: "Kubernetes\nkubeadm via sysext" {class: navy; width: 540; height: 96}
+  }
+  op: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 20
+    dp: "device plugin" {class: navy; width: 353; height: 96}
+    dcgm: "dcgm-exporter" {class: navy; width: 353; height: 96}
+    gfd: "feature discovery" {class: navy; width: 353; height: 96}
+  }
+  drv: "" {
+    class: row
+    grid-rows: 1
+    grid-gap: 20
+    sysext: "NVIDIA driver sysext\nnvidia-drivers-570-open" {class: flatcar; width: 540; height: 96}
+    tk: "NVIDIA container toolkit\nshipped with the OS" {class: flatcar; width: 540; height: 96}
+  }
+  kern: "Flatcar kernel + /usr, built and tested together with the driver" {class: flatcar; width: 1100; height: 90}
+  gpu: "NVIDIA T4 (AWS g4dn.xlarge)" {class: hw; width: 1100; height: 80}
+}

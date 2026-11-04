@@ -80,5 +80,5 @@ sudo systemctl restart systemd-sysext
   under `ssh/` (gitignored) and substitutes the public key before booting,
   same as folder 01.
 - GPG verification of the Flatcar download is off by default. Set
-  `VERIFY_GPG=1` to turn it on. (This is separate from the sysext, which
-  Flatcar verifies by its own signature when merging.)
+  `VERIFY_GPG=1` to turn it on. It covers the Flatcar image and wrapper
+  only, not the sysext that Ignition fetches at boot.

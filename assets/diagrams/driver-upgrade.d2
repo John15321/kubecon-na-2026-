@@ -1,0 +1,33 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  idle: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  active: {style: {fill: "#09BAC8"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  group: {style: {fill: "#F3F6FA"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 30; bold: true; border-radius: 14}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 5; font-color: "#12172B"; font-size: 26; bold: true}}
+}
+
+direction: right
+
+before: "Before: Flatcar 4820.0.1" {
+  class: group
+  grid-columns: 1
+  grid-gap: 16
+  a: "USR-A  active\nkernel + driver 570-open" {class: active; width: 420; height: 110}
+  b: "USR-B  passive\nprevious image" {class: idle; width: 420; height: 110}
+}
+
+after: "After reboot: Flatcar 4865.0.0" {
+  class: group
+  grid-columns: 1
+  grid-gap: 16
+  a: "USR-A  rollback\nkernel + driver 570-open" {class: idle; width: 420; height: 110}
+  b: "USR-B  active\nkernel + driver 580-open" {class: active; width: 420; height: 110}
+}
+
+before -> after: "update_engine\nwrites B, reboots" {class: arrow}

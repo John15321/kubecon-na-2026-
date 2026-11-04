@@ -1,0 +1,38 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  flatcar: {style: {fill: "#09BAC8"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  group: {style: {fill: "#F3F6FA"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 30; bold: true; border-radius: 14}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 4; font-color: "#12172B"; font-size: 24}}
+}
+
+direction: right
+
+cfg: "config.bu" {class: yours; width: 200; height: 110}
+
+boot: "Automatic, on first boot" {
+  class: group
+  grid-columns: 1
+  grid-gap: 16
+  fetch: "Ignition fetches\nthe k8s sysext" {class: flatcar; width: 340; height: 100}
+  merge: "systemd-sysext\nmerges it into /usr" {class: flatcar; width: 340; height: 100}
+  init: "kubeadm.service\nruns kubeadm init once" {class: navy; width: 340; height: 100}
+}
+
+live: "Live, on stage" {
+  class: group
+  grid-columns: 1
+  grid-gap: 16
+  cni: "kubectl apply\nFlannel CNI" {class: yours; width: 300; height: 100}
+  ready: "Node Ready\nschedule workloads" {class: navy; width: 300; height: 100}
+}
+
+cfg -> boot {class: arrow}
+boot -> live: "NotReady\nuntil a CNI" {class: arrow}

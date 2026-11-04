@@ -61,11 +61,11 @@ author: Jan Bronicki, Sayan Chowdhury
 # Agenda
 
 - The community behind Flatcar
-- Flatcar in five minutes
-- The GPU node problem
-- NVIDIA drivers as sysexts
-- Live demo: a local LLM on Flatcar
+- Flatcar in five minutes, live in a VM
+- sysexts and Kubernetes, live in a VM
 - Release channels
+- The GPU node problem: NVIDIA drivers as sysexts, live on AWS
+- Live: an LLM, GPU metrics, and Triton on Flatcar
 
 ---
 
@@ -369,6 +369,104 @@ No login. No post-boot setup. The machine came up already doing its job.
 
 ---
 
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 01</p>
+
+# Flatcar on QEMU
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- No installer: the disk image <strong>is</strong> the OS
+- Login prompt in seconds
+- SSH works with a key Ignition put there
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/01-getting-started-on-flatcar-on-qemu</span>
+<code>$ ./demo-tmux.sh</code>
+<code class="c"># right pane, once sshd is up:</code>
+<code>$ ssh -i ssh/demo_ed25519 \</code>
+<code>    -p 2222 core@localhost</code>
+<code>$ cat /etc/os-release</code>
+</div>
+</div>
+
+<!--
+Before we prove the nginx story, let's start smaller: a config whose only content is one SSH public key.
+
+Switch to the terminal. Left pane is the serial console, right pane waits for sshd.
+
+While it boots, say: there is no installer step. We downloaded a disk image, handed QEMU a config, and that is the whole procedure. The same image boots on every cloud on the earlier logo slide.
+
+Payoff: SSH in with the key from the config, cat /etc/os-release. Nobody typed a password, nobody clicked through a wizard.
+
+Fallback if the VM won't boot: asciinema play demo.cast in the same folder.
+-->
+
+---
+
+# First boot does the work
+
+<p class="lede">Ignition runs <strong>once</strong>, in the initramfs, <strong>before</strong> the real system starts. Users, files, and units already exist when systemd comes up.</p>
+
+<img class="diagram" style="height: 400px" src="assets/diagrams/ignition-first-boot.svg" alt="config.bu is transpiled by butane into config.ign, handed over as user-data; on first boot Ignition creates users, files and systemd units in the initramfs, then systemd starts the units and nginx serves on port 8080">
+
+<div class="legend"><span class="lg-yours">Your config</span><span class="lg-flatcar">Applied by Ignition</span><span class="lg-k8s">Running system</span></div>
+
+<!--
+Talk track: the difference from cloud-init is timing. Ignition runs before the root filesystem is switched to, so there is no window where the machine is half configured and serving.
+
+Walk the diagram left to right: Butane is what you write and review in Git. butane turns it into Ignition JSON. The platform hands that over as user-data. Ignition writes users, files, and units, then the normal boot continues.
+
+If Ignition fails, the boot fails. That is a feature: a machine never comes up silently wrong.
+
+Next demo: the same QEMU VM, but the config now does real work.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 02</p>
+
+# Ignition doing real first-boot work
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- Hostname and a second user, set declaratively
+- Containers running before anyone logs in
+- nginx reachable from the laptop on <code>:8080</code>
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/02-ignition-first-boot-setup</span>
+<code>$ ./demo-tmux.sh</code>
+<code>$ hostname</code>
+<code>$ groups demo</code>
+<code>$ docker ps</code>
+<code>$ journalctl -u hello-world.service</code>
+<code class="c"># back on the laptop:</code>
+<code>$ curl http://localhost:8080</code>
+</div>
+</div>
+
+<!--
+Before switching, show config.bu briefly in the editor: two users, two files, two units. That is everything this machine will ever be told.
+
+While it boots: the VM runs with -snapshot, so every run is a genuine first boot. What you see is Ignition doing the work live, not a pre-baked image.
+
+Payoff: curl localhost:8080 from the laptop. No login, no setup, the machine came up already doing its job. Point back at the "It came up serving" slide.
+-->
+
+---
+
 <!-- _class: sidebar -->
 
 # Immutable by Design
@@ -389,6 +487,134 @@ No login. No post-boot setup. The machine came up already doing its job.
   <span style="border: 2px dashed #12172B; border-radius: 4px; padding: 2px 10px; background: #fff; color: #12172B">Writable: yours</span>
   <span style="border: 2px solid #12172B; border-radius: 4px; padding: 2px 10px; background: #09BAC8; color: #12172B">Read-only: Flatcar's</span>
 </div>
+
+---
+
+# System extensions
+
+<p class="lede">No package manager, read-only <code>/usr</code>. A <strong>sysext</strong> is a squashfs image that systemd <strong>overlays</strong> onto <code>/usr</code> at boot. Add the file: the software appears. Remove it: gone.</p>
+
+<img class="diagram" style="height: 390px" src="assets/diagrams/sysext-merge.svg" alt="kubernetes.raw in /etc/extensions and Flatcar's read-only /usr are merged by systemd-sysext into a single read-only /usr that contains both kubeadm, kubelet, kubectl and Flatcar's own systemd, containerd and docker">
+
+<div class="legend"><span class="lg-yours">Extension you add</span><span class="lg-flatcar">Flatcar base</span><span class="lg-k8s">systemd</span></div>
+
+<!--
+Talk track: this answers the question everyone asks at this point. "If /usr is read-only and there is no package manager, how do I install anything?"
+
+A sysext is just a filesystem image. systemd-sysext stacks it on top of /usr with an overlay. The result is still read-only, and the base image underneath is byte-for-byte what we shipped.
+
+This is not Flatcar-specific magic: systemd-sysext is upstream systemd, and the UAPI group we mentioned earlier standardises it across distros.
+
+Lifecycle: drop the file into /etc/extensions, and it is merged. Delete it, restart systemd-sysext, and it is gone. No leftover files, no dependency resolution.
+
+We use Kubernetes as the example because it is the extension this audience cares about most.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 03</p>
+
+# Adding Kubernetes with a sysext
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- <code>kubernetes</code> listed as a merged extension
+- kubeadm, kubelet, kubectl on a box with no package manager
+- <code>/usr</code> is still read-only
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/03-system-extensions</span>
+<code>$ ./demo-tmux.sh</code>
+<code>$ systemd-sysext status</code>
+<code>$ which kubeadm kubelet kubectl</code>
+<code>$ kubeadm version</code>
+<code>$ sudo touch /usr/bin/hello</code>
+<code class="c"># Read-only file system</code>
+</div>
+</div>
+
+<!--
+Show config.bu first: one file entry pointing at extensions.flatcar.org, and one unit enabled. That is the whole "installation".
+
+While it boots: Ignition downloads the sysext during first boot, so this VM needs network. If the venue Wi-Fi is bad, use the offline fallback in the folder README.
+
+Payoff 1: systemd-sysext status shows the kubernetes extension merged into /usr.
+Payoff 2: try to write to /usr and get "Read-only file system". We added software without making the OS mutable.
+
+Bridge: having the binaries is half the job. Next, one more unit turns this into a running cluster.
+-->
+
+---
+
+# A Kubernetes node from one config
+
+<p class="lede">Same sysext, plus one systemd unit that runs <code>kubeadm init</code> on first boot. A <code>ConditionPathExists</code> guard makes it run <strong>exactly once</strong>: reboots resume the cluster.</p>
+
+<img class="diagram" style="height: 390px" src="assets/diagrams/k8s-node-boot.svg" alt="config.bu drives first boot automatically: Ignition fetches the Kubernetes sysext, systemd-sysext merges it, kubeadm.service runs kubeadm init once. Then live on stage: apply the Flannel CNI and the node becomes Ready">
+
+<div class="legend"><span class="lg-yours">You</span><span class="lg-flatcar">Flatcar</span><span class="lg-k8s">Kubernetes</span></div>
+
+<!--
+Talk track: no special Kubernetes edition of Flatcar exists. It is the same image as the previous demo, with one extra unit.
+
+The guard is ConditionPathExists=!/etc/kubernetes/kubelet.conf. First boot: the file does not exist, kubeadm init runs. Every later boot: the file exists, the unit is skipped, and the existing cluster resumes.
+
+We deliberately leave the CNI as a live step so you can see the node go from NotReady to Ready.
+
+Pinned versions, for the curious: Kubernetes v1.37.1 (v1.37.2 crashes on start), Flannel v0.28.10.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 04</p>
+
+# Kubernetes on Flatcar
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- <code>kubeadm init</code> already ran during boot
+- Node goes <strong>NotReady</strong> to <strong>Ready</strong> with one apply
+- A workload scheduled on the node
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/04-deploy-kubernetes-with-flatcar</span>
+<code>$ ./reset.sh && ./demo-tmux.sh</code>
+<code>$ kubectl get nodes</code>
+<code class="c"># NotReady: no CNI yet</code>
+<code>$ kubectl apply -f &lt;flannel v0.28.10&gt;</code>
+<code>$ kubectl get nodes</code>
+<code>$ kubectl get pods -A</code>
+<code>$ kubectl taint node flatcar-demo \</code>
+<code>    node-role.kubernetes.io/control-plane-</code>
+<code>$ kubectl apply -f app-demo.yaml</code>
+</div>
+</div>
+
+<!--
+Run reset.sh before the talk, not on stage: it restores a fresh disk from the local cache.
+
+The VM needs 4GB RAM and 2 vCPUs for kubeadm, run.sh sets that.
+
+While kubeadm init finishes in the top pane: the kubeconfig is already in /home/core/.kube/config, written by the same unit, so kubectl works without flags.
+
+The exact Flannel URL is in demos/COMMANDS.md, copy it from there.
+
+Optional: untaint the control plane and apply app-demo.yaml, then curl localhost:30080 on the node (NodePort) to show which pod answered. It is not forwarded to the laptop.
+
+Fallback: asciinema play demo.cast in this folder.
+-->
 
 ---
 
@@ -485,15 +711,346 @@ Every commit runs the full test suite: unit, integration, and product tests acro
 
 - Driver shipped as a systemd-sysext image, merged over read-only `/usr`
 - Pinned per kernel and Flatcar release, versioned like any artifact
-- Update or roll back the driver without touching the base OS
+- Updated and rolled back **with** the OS, atomically, through A/B
+
+---
+
+# Who owns what on a GPU node
+
+<p class="lede">Flatcar ships the driver and the container toolkit, built against its own kernel. The GPU Operator runs with <code>driver.enabled=false</code> and <code>toolkit.enabled=false</code>: it only does the Kubernetes side.</p>
+
+<img class="diagram" style="height: 390px" src="assets/diagrams/gpu-node-stack.svg" alt="Layer stack from bottom: NVIDIA T4 hardware; Flatcar kernel and /usr built with the driver; NVIDIA driver sysext and container toolkit shipped by Flatcar; GPU Operator components: device plugin, dcgm-exporter, feature discovery; Kubernetes and your GPU workloads on top">
+
+<div class="legend"><span class="lg-flatcar">Flatcar ships it</span><span class="lg-k8s">Kubernetes / GPU Operator</span><span class="lg-yours">Your workload</span><span class="lg-hw">Hardware</span></div>
+
+<!--
+Talk track: on a general-purpose distro, the GPU Operator usually compiles and loads the driver at runtime in a privileged container. Every kernel update is a chance for that to break.
+
+On Flatcar the driver is part of the OS release: built against the exact kernel it ships with and tested together in CI. So we turn the Operator's driver and toolkit off, and keep the parts that are genuinely Kubernetes concerns: the device plugin, metrics, and node labels.
+
+The cyan line in the middle is the whole point: the risky part moved from "runtime, on every node" to "build time, once, in CI".
+
+This demo runs on a real AWS g4dn.xlarge with an NVIDIA T4.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 05</p>
+
+# A GPU node on AWS
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- <code>nvidia-smi</code> works on a fresh node: no driver install step
+- The driver listed as a merged sysext
+- A pod that asks for a GPU gets one
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/05-nvidia-driver-on-flatcar-aws</span>
+<code>$ ./demo-tmux.sh</code>
+<code>$ systemd-sysext status</code>
+<code>$ nvidia-smi</code>
+<code class="c"># CNI + untaint, then (full flags: COMMANDS.md)</code>
+<code>$ helm install gpu-operator nvidia/gpu-operator \</code>
+<code>    --set driver.enabled=false \</code>
+<code>    --set toolkit.enabled=false</code>
+<code>$ kubectl get pods -n gpu-operator</code>
+<code>$ kubectl run gpu-test ... -- nvidia-smi</code>
+</div>
+</div>
+
+<!--
+Start this instance BEFORE the talk with AWS_PROFILE=<name> ./run.sh. Boot plus kubeadm takes minutes, and run.sh reuses a running instance, so demo-tmux.sh on stage just reattaches.
+
+This is real, billed infrastructure (about $0.53/hr). The same instance serves demos 07, 08 and 09. Tear it down after the talk with ./teardown.sh in this folder.
+
+Payoff 1: nvidia-smi on the host, right after boot. Nobody installed a driver.
+Payoff 2: the gpu-test pod prints the same nvidia-smi table from inside a container, which proves the device plugin and toolkit wiring.
+
+If time is short, have the GPU Operator installed beforehand and only show kubectl get pods -n gpu-operator.
+-->
+
+---
+
+# Driver upgrades ride the OS update
+
+<p class="lede">The driver is built <strong>with</strong> the kernel, so it is upgraded <strong>with</strong> the OS: one atomic A/B update. If the new driver misbehaves, reboot into the old slot.</p>
+
+<img class="diagram" style="height: 390px" src="assets/diagrams/driver-upgrade.svg" alt="Before: Flatcar 4820.0.1 with USR-A active holding kernel and driver 570-open. update_engine writes USR-B and reboots. After: Flatcar 4865.0.0 with USR-B active holding kernel and driver 580-open, USR-A kept as rollback">
+
+<div class="legend"><span class="lg-flatcar">Active slot</span><span class="lg-yours">Passive / rollback slot</span></div>
+
+<!--
+Talk track: connect this to the A/B slide from earlier. Nothing new is being invented for GPUs: the driver simply rides along with the normal OS update.
+
+There is no moment where the new kernel boots with the old driver, because they arrive in the same image. And the old pair stays on disk in the other slot, which is your rollback.
+
+Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updated to 4865.0.0 with 580-open.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 06</p>
+
+# NVIDIA driver upgrade in place
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- Before: driver branch <strong>570-open</strong>
+- One command: download, apply, reboot
+- After: <strong>580-open</strong>, config untouched
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/06-nvidia-driver-upgrade-in-place</span>
+<code>$ ./demo-tmux.sh</code>
+<code>$ systemd-sysext status</code>
+<code>$ nvidia-smi</code>
+<code>$ update_engine_client -status</code>
+<code>$ update_engine_client -update</code>
+<code class="c"># reboots, SSH back in with the same key</code>
+<code>$ systemd-sysext status</code>
+<code>$ nvidia-smi</code>
+</div>
+</div>
+
+<!--
+This is a SECOND, separate billed instance on an older Flatcar build, so there is a version gap to cross. It does not touch demo 05's cluster. Start it before the talk, and run ./teardown.sh in this folder afterwards.
+
+While the update downloads and the node reboots, go back to the previous slide: the active slot is about to flip from A to B.
+
+Payoff: same nvidia-smi command, new driver version, and we never touched a driver package.
+
+If you are short on time, move this demo to the end; nothing else depends on it.
+-->
+
+---
+
+# Scheduling a model onto the GPU
+
+<p class="lede">The device plugin advertises the GPU as a countable resource. A pod that asks for <code>nvidia.com/gpu: 1</code> lands on it, and a second one waits.</p>
+
+<img class="diagram" style="height: 390px" src="assets/diagrams/vllm-scheduling.svg" alt="The vllm-demo Deployment requests one nvidia.com/gpu; kube-scheduler binds it to the Flatcar GPU node, where the device plugin advertises the GPU capacity; the vLLM pod serves Qwen2.5-0.5B on the T4 with an OpenAI-compatible API on port 8000, called with curl">
+
+<div class="legend"><span class="lg-yours">Your workload</span><span class="lg-k8s">Kubernetes / GPU Operator</span></div>
+
+<!--
+Talk track: from here on, nothing is Flatcar-specific, and that is the point. Once the node exposes the GPU properly, it is ordinary Kubernetes.
+
+vLLM serves an OpenAI-compatible API, so the curl you are about to see has the same shape as a call to a hosted model, only this one runs on our node.
+
+Model: Qwen2.5-0.5B-Instruct. Small on purpose, so it downloads in a demo-friendly time and fits the T4's 16GB.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 07</p>
+
+# vLLM inference on Flatcar
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- A model generating text on the T4
+- An OpenAI-style API, served from our node
+- A second replica stuck: <strong>Insufficient nvidia.com/gpu</strong>
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/07-vllm-inference-on-flatcar</span>
+<code>$ kubectl apply -f vllm-demo.yaml</code>
+<code>$ kubectl get pods -w</code>
+<code>$ CLUSTER_IP=$(kubectl get svc vllm-demo \</code>
+<code>    -o jsonpath='{.spec.clusterIP}')</code>
+<code>$ curl $CLUSTER_IP:8000/v1/completions \</code>
+<code>    -H "Content-Type: application/json" \</code>
+<code>    -d '{"model":"Qwen/Qwen2.5-0.5B-Instruct",</code>
+<code>         "prompt":"Flatcar Container Linux is",</code>
+<code>         "max_tokens":40}'</code>
+<code>$ kubectl scale deploy vllm-demo --replicas=2</code>
+</div>
+</div>
+
+<!--
+The first start pulls about 1GB of model and can take up to 5 minutes. Pre-pull it before the talk (apply once, wait for Ready). On stage, the apply is then near-instant.
+
+While the pod starts, the startup probe fails with "connection refused". That is expected while the model loads.
+
+Use the Service ClusterIP, not the name: cluster DNS serves pods, not the node's own shell.
+
+Payoff: the completion text coming back live. Then the scheduling beat: scale to 2, the second pod stays Pending with Insufficient nvidia.com/gpu, because there is exactly one T4. Scale back to 1.
+
+Leave vLLM running: the next demo needs it.
+-->
+
+---
+
+# Seeing the GPU work
+
+<p class="lede"><code>dcgm-exporter</code> comes with the GPU Operator. It reads GPU counters and serves them as Prometheus metrics on <code>:9400</code>, the same endpoint you would scrape into Grafana.</p>
+
+<img class="diagram" style="height: 300px" src="assets/diagrams/dcgm-metrics.svg" alt="Pane A sends a curl loop of requests to the vLLM pod, which runs inference on the T4 GPU; dcgm-exporter from the GPU Operator reads the GPU every 2 seconds and serves metrics on port 9400, watched in Pane B">
+
+<div class="legend"><span class="lg-yours">Your terminals / workload</span><span class="lg-k8s">GPU Operator</span><span class="lg-hw">Hardware</span></div>
+
+<!--
+Talk track: we just made the GPU do work. Now let us see it working, with the observability path you would use in production.
+
+No Prometheus or Grafana on stage, just two terminal panes, so the cause and effect is obvious: left pane sends requests, right pane shows utilization.
+
+One tuning note: we set the exporter interval to 2s for the demo. The default is 30s, which looks frozen under a short burst.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 08</p>
+
+# GPU metrics with DCGM
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- GPU utilization near 0 while idle
+- A spike every time a request lands
+- Metrics from the GPU Operator, nothing extra installed
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/08-dcgm-metrics-demo</span>
+<code>$ ./demo-tmux.sh</code>
+<code class="c"># pane A: the curl loop against vLLM</code>
+<code>$ while true; do curl -s ... ; sleep 2; done</code>
+<code class="c"># pane B: the GPU utilization</code>
+<code>$ watch -n1 "curl -s $DCGM_POD_IP:9400/metrics \</code>
+<code>    | grep DCGM_FI_DEV_GPU_UTIL"</code>
+</div>
+</div>
+
+<!--
+Precondition: demo 07's vLLM is Running. Set DCGM_POD_IP and CLUSTER_IP first; both commands are in COMMANDS.md.
+
+Start pane B first so the audience sees the idle baseline, then start the loop in pane A.
+
+Run curl on the host, against the exporter pod's IP. The exporter image has no shell or curl.
+
+Payoff: utilization jumps when a request lands, drops between requests.
+-->
+
+---
+
+# Not locked to one framework
+
+<p class="lede">Different model, different server, different API, same node. NVIDIA Triton serves a DenseNet image classifier, and the client runs in-cluster as a Job.</p>
+
+<img class="diagram" style="height: 300px" src="assets/diagrams/triton-flow.svg" alt="The triton-classify Job converts an image to a 224 by 224 by 3 tensor and sends it through the triton-demo Service on port 8000 to the Triton server running DenseNet-121 in ONNX on the T4, which answers class 258, Samoyed">
+
+<div class="legend"><span class="lg-yours">Your workload</span><span class="lg-k8s">Kubernetes</span><span class="lg-hw">Hardware</span></div>
+
+<!--
+Optional segment: skip it if time is short. Nothing depends on it.
+
+Talk track: vLLM was an LLM behind an OpenAI API. Triton is a vision model behind a tensor API. The node did not need to know either way.
+
+Why the client is a Job, not a curl: Triton wants a raw tensor matching the model's input shape. A tiny Python client does the preprocessing, and it runs in the cluster because Flatcar's host has no Python. Which is the point of a minimal host.
+-->
+
+---
+
+<!-- _class: demo -->
+
+<p class="demo-kicker">Live demo · 09 (optional)</p>
+
+# Triton inference on Flatcar
+
+<div class="demo-grid">
+<div>
+
+<p class="demo-label">Watch for</p>
+
+- Server and client from a single apply
+- The model fetched by an init container
+- A correct prediction: <strong>258, Samoyed</strong>
+
+</div>
+<div class="demo-term">
+<span class="demo-path">demos/09-triton-inference-on-flatcar</span>
+<code>$ kubectl apply -f triton-demo.yaml</code>
+<code>$ kubectl get pods -w</code>
+<code>$ kubectl logs job/triton-classify</code>
+<code class="c"># Predicted class index: 258 (Samoyed)</code>
+</div>
+</div>
+
+<!--
+The test image is a Samoyed, and index 258 is "Samoyed" in the DenseNet labels, so the answer is checkably right.
+
+The score printed is a raw logit, not a probability, so values above 1 are normal. Expect someone to ask.
+
+To re-run the client: kubectl delete job triton-classify && kubectl apply -f triton-demo.yaml.
+
+After the talk: run ./teardown.sh in demos/05 (and demos/06) to stop AWS billing.
+-->
 
 ---
 
 <!-- _class: lead -->
 
-# Demos!
+# Try it yourself
 
 ## github.com/flatcar/flatcar-demos
+
+<div class="cols-3" style="align-items: start; gap: 40px; font-size: 22px; line-height: 1.5; margin-top: 8px">
+
+<div>
+
+**Local, QEMU, free**
+
+- 01 Flatcar on QEMU
+- 02 Ignition first boot
+- 03 System extensions
+- 04 Kubernetes
+
+</div>
+
+<div>
+
+**AWS, NVIDIA T4**
+
+- 05 GPU node
+- 06 Driver upgrade in place
+
+</div>
+
+<div>
+
+**GPU workloads**
+
+- 07 vLLM inference
+- 08 DCGM metrics
+- 09 Triton inference
+
+</div>
+
+</div>
 
 ---
 

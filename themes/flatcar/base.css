@@ -444,3 +444,41 @@ section p:has(> img[alt*="pane-"]) {
   margin-top: calc(12px * var(--ab-scale));
 }
 .ab-cycle strong { color: var(--bg-navy); }
+
+/* ---------- Diagram legend ----------
+ * Same visual language as every diagram in assets/diagrams:
+ * <div class="legend">
+ *   <span class="lg-flatcar">Flatcar ships it</span>
+ *   <span class="lg-yours">Your config / workload</span>
+ *   <span class="lg-k8s">Kubernetes</span>
+ * </div> */
+.legend {
+  position: absolute;
+  bottom: 22px;
+  right: 80px;
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.legend span {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  padding: 2px 10px;
+  color: var(--ink);
+  background: var(--paper);
+}
+.legend .lg-flatcar { background: var(--accent-cyan); }
+.legend .lg-yours   { border-style: dashed; }
+.legend .lg-k8s     { background: var(--bg-navy); color: var(--paper); }
+.legend .lg-hw      { background: #E4E8EF; border-color: var(--muted); }
+
+/* Explain slide: short points above a diagram. */
+.lede { font-size: 26px; line-height: 1.4; margin: 0 0 10px 0; }
+.lede strong { color: var(--ink); }
+.diagram {
+  display: block;
+  margin: 8px auto 0;
+  max-width: 100%;
+  object-fit: contain;
+}

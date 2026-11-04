@@ -1,0 +1,34 @@
+vars: {
+  d2-config: {
+    pad: 24
+    sketch: false
+  }
+}
+
+classes: {
+  yours: {style: {fill: "#FFFFFF"; stroke: "#12172B"; stroke-width: 3; stroke-dash: 6; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10}}
+  flatcar: {style: {fill: "#09BAC8"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  navy: {style: {fill: "#12172B"; stroke: "#12172B"; stroke-width: 3; font-color: "#FFFFFF"; font-size: 28; bold: true; border-radius: 10; shadow: true}}
+  group: {style: {fill: "#F3F6FA"; stroke: "#12172B"; stroke-width: 3; font-color: "#12172B"; font-size: 30; bold: true; border-radius: 14}}
+  arrow: {style: {stroke: "#12172B"; stroke-width: 4; font-color: "#12172B"; font-size: 24}}
+}
+
+direction: right
+
+bu: "config.bu\nButane YAML" {class: yours; width: 240; height: 120}
+ign: "config.ign\nIgnition JSON" {class: yours; width: 240; height: 120}
+
+boot: "First boot, in the initramfs" {
+  class: group
+  grid-columns: 1
+  grid-gap: 16
+  users: "users: core, demo" {class: flatcar; width: 400; height: 80}
+  files: "files: hostname, welcome.sh" {class: flatcar; width: 400; height: 80}
+  units: "units: hello-world, nginx" {class: flatcar; width: 400; height: 80}
+}
+
+up: "systemd starts the units\nnginx serving on :8080" {class: navy; width: 330; height: 140}
+
+bu -> ign: "butane" {class: arrow}
+ign -> boot: "user-data" {class: arrow}
+boot -> up: "switch root" {class: arrow}

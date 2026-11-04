@@ -2,7 +2,7 @@
 #
 # Folder 08 is inherently a two-pane demo: fire vLLM requests in one pane
 # and watch GPU utilization react in the other. Both panes SSH into folder
-# 03's instance (no infra of its own). Each waits for sshd, then drops you
+# 05's instance (no infra of its own). Each waits for sshd, then drops you
 # at a prompt so you type the commands live -- see README.md:
 #   Pane A: a curl loop against vLLM (folder 07 must be running)
 #   Pane B: watch -n1 the dcgm-exporter /metrics for DCGM_FI_DEV_GPU_UTIL
