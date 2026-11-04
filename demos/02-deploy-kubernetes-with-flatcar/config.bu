@@ -1,0 +1,153 @@
+variant: flatcar
+version: 1.0.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - __SSH_PUBLIC_KEY__
+storage:
+  files:
+    # The Kubernetes sysext image: kubeadm, kubelet, and kubectl. This is
+    # how you add software to Flatcar, which has a read-only /usr and no
+    # package manager.
+    - path: /opt/extensions/kubernetes/kubernetes-v1.37.1-x86-64.raw
+      mode: 0644
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.37.1-x86-64.raw
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: flatcar-demo
+    # Demo workload, staged on disk so `kubectl apply -f app-demo.yaml`
+    # needs no copy step. It is not auto-applied; the apply stays a live
+    # step.
+    - path: /home/core/app-demo.yaml
+      mode: 0644
+      contents:
+        inline: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: flatcar-demo-app-code
+          data:
+            server.py: |
+              import os
+              import socket
+              from datetime import datetime, timezone
+              from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+              count = 0
+
+              class Handler(BaseHTTPRequestHandler):
+                  def do_GET(self):
+                      global count
+                      count += 1
+                      body = f"""<!DOCTYPE html>
+              <html>
+              <head><title>Hello from Flatcar</title></head>
+              <body style="font-family: sans-serif; text-align: center; margin-top: 8%;">
+                <h1>Running on a Flatcar-powered Kubernetes node</h1>
+                <p>Pod name: <b>{os.environ.get('POD_NAME', 'unknown')}</b></p>
+                <p>Pod IP: <b>{os.environ.get('POD_IP', 'unknown')}</b></p>
+                <p>Node: <b>{os.environ.get('NODE_NAME', 'unknown')}</b></p>
+                <p>Requests served by this pod: <b>{count}</b></p>
+                <p>Server time: {datetime.now(timezone.utc).isoformat()}</p>
+              </body>
+              </html>"""
+                      self.send_response(200)
+                      self.send_header("Content-Type", "text/html")
+                      self.end_headers()
+                      self.wfile.write(body.encode())
+
+                  def log_message(self, fmt, *args):
+                      pass
+
+              ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: flatcar-demo-app
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: flatcar-demo-app
+            template:
+              metadata:
+                labels:
+                  app: flatcar-demo-app
+              spec:
+                containers:
+                  - name: app
+                    image: python:3.12-alpine
+                    command: ["python3", "/app/server.py"]
+                    ports:
+                      - containerPort: 8080
+                    env:
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_IP
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: status.podIP
+                      - name: NODE_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: spec.nodeName
+                    volumeMounts:
+                      - name: code
+                        mountPath: /app
+                volumes:
+                  - name: code
+                    configMap:
+                      name: flatcar-demo-app-code
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: flatcar-demo-app
+          spec:
+            type: NodePort
+            selector:
+              app: flatcar-demo-app
+            ports:
+              - port: 80
+                targetPort: 8080
+                nodePort: 30080
+  links:
+    # systemd-sysext merges images linked from /etc/extensions. The file
+    # lives under /opt; this symlink points to it.
+    - path: /etc/extensions/kubernetes.raw
+      target: /opt/extensions/kubernetes/kubernetes-v1.37.1-x86-64.raw
+      hard: false
+systemd:
+  units:
+    # Merges the sysext images into /usr at boot. This is what makes
+    # kubeadm, kubelet, and kubectl appear.
+    - name: systemd-sysext.service
+      enabled: true
+    # Runs kubeadm init once. ConditionPathExists skips this unit on later
+    # boots, so rebooting the same disk resumes the existing cluster.
+    - name: kubeadm.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=kubeadm init (single-node demo control plane)
+        Requires=containerd.service
+        After=containerd.service network-online.target systemd-sysext.service
+        Wants=network-online.target
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        # Pin the Kubernetes version. v1.37.2 crashes on start; v1.37.1
+        # works. Without the flag, kubeadm picks the broken latest patch.
+        ExecStartPre=/usr/bin/kubeadm init --kubernetes-version=v1.37.1 --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock
+        ExecStartPre=/usr/bin/mkdir -p /home/core/.kube
+        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+        [Install]
+        WantedBy=multi-user.target

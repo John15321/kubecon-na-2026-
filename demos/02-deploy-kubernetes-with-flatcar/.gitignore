@@ -1,0 +1,7 @@
+flatcar_production_qemu.sh
+flatcar_production_qemu.sh.sig
+flatcar_production_qemu_image.img
+flatcar_production_qemu_image.img.sig
+flatcar_production_qemu_image.img.orig
+config.ign
+ssh/

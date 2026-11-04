@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: triton-model-fetch
+data:
+  fetch.sh: |
+    #!/bin/sh
+    set -e
+    # NVIDIA's Triton example model (ONNX DenseNet, image classification).
+    mkdir -p /models/densenet_onnx/1
+    cd /models/densenet_onnx
+    wget -q https://raw.githubusercontent.com/triton-inference-server/server/main/docs/examples/model_repository/densenet_onnx/config.pbtxt -O config.pbtxt
+    wget -q https://raw.githubusercontent.com/triton-inference-server/server/main/docs/examples/model_repository/densenet_onnx/densenet_labels.txt -O densenet_labels.txt
+    wget -q -O 1/model.onnx \
+      "https://media.githubusercontent.com/media/onnx/models/main/validated/vision/classification/densenet-121/model/densenet-9.onnx"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton-demo
+  template:
+    metadata:
+      labels:
+        app: triton-demo
+    spec:
+      initContainers:
+        - name: fetch-model
+          image: busybox:1.36
+          command: ["sh", "/scripts/fetch.sh"]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: models
+              mountPath: /models
+      containers:
+        - name: triton
+          # Pin an exact tag before recording.
+          image: nvcr.io/nvidia/tritonserver:24.08-py3
+          args: ["tritonserver", "--model-repository=/models"]
+          ports:
+            - containerPort: 8000   # HTTP
+            - containerPort: 8001   # gRPC
+            - containerPort: 8002   # metrics
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: models
+              mountPath: /models
+          readinessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+      volumes:
+        - name: scripts
+          configMap:
+            name: triton-model-fetch
+            defaultMode: 0755
+        - name: models
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton-demo
+spec:
+  selector:
+    app: triton-demo
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+# The client. Triton wants a raw tensor payload, not a plain curl, so the
+# client is a small program. It runs in-cluster and reaches the server by
+# its Service name triton-demo:8000, which resolves from inside a pod. This
+# needs no port-forward, and Flatcar's host has no python anyway.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: triton-client-script
+data:
+  classify.py: |
+    #!/usr/bin/env python3
+    """Minimal Triton HTTP client for the densenet_onnx demo model.
+
+    Reaches the Triton server by its in-cluster Service DNS name. Downloads
+    a test image, preprocesses it to DenseNet's 224x224x3 input, sends it,
+    prints the top prediction.
+    """
+    import sys
+    import numpy as np
+    from io import BytesIO
+    from urllib.request import urlopen
+    from PIL import Image
+    import tritonclient.http as httpclient
+
+    def preprocess(image_bytes):
+        img = Image.open(BytesIO(image_bytes)).convert("RGB").resize((224, 224))
+        arr = np.asarray(img, dtype=np.float32) / 255.0
+        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+        arr = (arr - mean) / std
+        return arr.transpose(2, 0, 1)  # CHW; model has max_batch_size=0, no batch dim
+
+    def main():
+        image_url = sys.argv[1] if len(sys.argv) > 1 else \
+            "https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg"
+        triton_addr = sys.argv[2] if len(sys.argv) > 2 else "triton-demo:8000"
+
+        image_bytes = urlopen(image_url).read()
+        input_tensor = preprocess(image_bytes)
+
+        client = httpclient.InferenceServerClient(url=triton_addr)
+        infer_input = httpclient.InferInput("data_0", input_tensor.shape, "FP32")
+        infer_input.set_data_from_numpy(input_tensor)
+        result = client.infer(model_name="densenet_onnx", inputs=[infer_input])
+
+        output = np.squeeze(result.as_numpy("fc6_1"))  # (1000,) regardless of trailing dims
+        top_idx = int(np.argmax(output))
+        print(f"Predicted class index: {top_idx} (confidence score: {output[top_idx]:.3f})")
+        print("Cross-reference against densenet_labels.txt in the model repo for the class name.")
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: triton-classify
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: client
+          image: python:3.11-slim
+          command: ["sh", "-c"]
+          # pip install adds ~30s and prints pip noise. For a clean
+          # recording, bake the deps into an image or use the Triton SDK
+          # image. The retry loop lets this Job start with the server in one
+          # apply: it retries until the server answers.
+          args:
+            - |
+              pip install --quiet --no-cache-dir "tritonclient[http]" pillow numpy
+              echo "waiting for triton-demo to answer..."
+              for i in $(seq 1 60); do
+                if python /app/classify.py \
+                    https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg \
+                    triton-demo:8000; then
+                  exit 0
+                fi
+                echo "  not ready yet (attempt $i), retrying in 5s..."
+                sleep 5
+              done
+              echo "triton-demo did not become ready in time" >&2
+              exit 1
+          volumeMounts:
+            - name: script
+              mountPath: /app
+      volumes:
+        - name: script
+          configMap:
+            name: triton-client-script
