@@ -29,9 +29,9 @@ storage:
       mode: 0644
       contents:
         inline: flatcar-gpu-demo
-    # Staged on disk so folder 05's `kubectl apply -f vllm-demo.yaml` needs
+    # Staged on disk so folder 07's `kubectl apply -f vllm-demo.yaml` needs
     # no copy step. Keep this in sync by hand with
-    # 05-vllm-inference-on-flatcar/vllm-demo.yaml.
+    # 07-vllm-inference-on-flatcar/vllm-demo.yaml.
     - path: /home/core/vllm-demo.yaml
       mode: 0644
       contents:
@@ -86,10 +86,10 @@ storage:
             ports:
               - port: 8000
                 targetPort: 8000
-    # Staged on disk so folder 07's `kubectl apply -f triton-demo.yaml`
+    # Staged on disk so folder 09's `kubectl apply -f triton-demo.yaml`
     # needs no copy step. One apply brings up the Triton server and the
     # client Job. Keep this in sync by hand with
-    # 07-triton-inference-on-flatcar/triton-demo.yaml.
+    # 09-triton-inference-on-flatcar/triton-demo.yaml.
     - path: /home/core/triton-demo.yaml
       mode: 0644
       contents:
@@ -299,7 +299,7 @@ systemd:
   units:
     - name: systemd-sysext.service
       enabled: true
-    # Runs kubeadm init once, same as folder 02. The --kubernetes-version
+    # Runs kubeadm init once, same as folder 04. The --kubernetes-version
     # pin matters: v1.37.2 crashes on start, v1.37.1 works.
     - name: kubeadm.service
       enabled: true

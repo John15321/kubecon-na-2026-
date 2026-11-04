@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Terminates the EC2 instance run.sh created and deletes its security
-# group. This is the only teardown for folders 03-07, which share this
+# group. This is the only teardown for folders 05-09, which share this
 # instance. Run it after the session to stop billing.
 
 set -euo pipefail

@@ -1,15 +1,15 @@
-# 05 - vLLM inference on Flatcar
+# 07 - vLLM inference on Flatcar
 
 Serve a small language model on the GPU with vLLM. vLLM exposes an
 OpenAI-compatible HTTP API, so the `curl` the audience sees has the same
 shape as a call to OpenAI.
 
-This folder has no instance of its own. It runs on folder 03's instance.
-Folder 03's cluster must be Ready with the GPU Operator installed.
+This folder has no instance of its own. It runs on folder 05's instance.
+Folder 05's cluster must be Ready with the GPU Operator installed.
 
 - **Model:** `Qwen/Qwen2.5-0.5B-Instruct`. Small, so it downloads and loads
   fast and fits the T4's 16GB with room to spare.
-- `vllm-demo.yaml` is staged onto the node by folder 03's Ignition, so
+- `vllm-demo.yaml` is staged onto the node by folder 05's Ignition, so
   `kubectl apply` needs no copy step.
 
 ## What to show
@@ -67,6 +67,6 @@ The second pod stays Pending because there is only one T4 on the node.
 asciinema rec demo.cast -c ./demo-tmux.sh
 ```
 
-`demo-tmux.sh` and `wait-for-ssh.sh` reuse folder 03's SSH key and instance
+`demo-tmux.sh` and `wait-for-ssh.sh` reuse folder 05's SSH key and instance
 state, wait for SSH, and give you a prompt to type the commands live. Bring
-folder 03 up first, or `wait-for-ssh.sh` tells you to.
+folder 05 up first, or `wait-for-ssh.sh` tells you to.

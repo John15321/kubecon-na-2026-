@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Folder 05 runs against folder 03's instance (no infra of its own), so
+# Folder 07 runs against folder 05's instance (no infra of its own), so
 # there is no launch pane -- just one SSH pane. It waits for sshd on folder
 # 03's box, then drops you at a prompt to type `ssh` and the vLLM demo
 # commands (kubectl apply -f vllm-demo.yaml, the curl, the scale beat) live.
 #
-# Precondition: folder 03 is up and its cluster is Ready with the GPU
+# Precondition: folder 05 is up and its cluster is Ready with the GPU
 # Operator installed. Record with:
 #   asciinema rec demo.cast -c ./demo-tmux.sh
 
@@ -21,6 +21,6 @@ tmux new-session -d -s "$SESSION" -x 220 -y 50 \
 
 tmux set-option -t "$SESSION" -g pane-border-status top
 tmux set-option -t "$SESSION" -g pane-border-format "#{pane_title}"
-tmux select-pane -t "${SESSION}:0.0" -T "vLLM demo (folder 03 instance)"
+tmux select-pane -t "${SESSION}:0.0" -T "vLLM demo (folder 05 instance)"
 
 tmux attach-session -t "$SESSION"

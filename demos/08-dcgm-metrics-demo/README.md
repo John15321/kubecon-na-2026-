@@ -1,12 +1,12 @@
-# 06 - DCGM GPU metrics, paired with vLLM
+# 08 - DCGM GPU metrics, paired with vLLM
 
 Watch GPU utilization react to live inference. Run this at the same time as
-folder 05, in two terminal panes, so the audience sees cause and effect.
+folder 07, in two terminal panes, so the audience sees cause and effect.
 
-This folder has no instance of its own. It runs on folder 03's instance,
-and folder 05's vLLM Deployment must already be Running.
+This folder has no instance of its own. It runs on folder 05's instance,
+and folder 07's vLLM Deployment must already be Running.
 
-`dcgm-exporter` is installed by the GPU Operator (folder 03). It serves
+`dcgm-exporter` is installed by the GPU Operator (folder 05). It serves
 Prometheus-format GPU metrics on port 9400 at `/metrics`. No Prometheus or
 Grafana is needed for this demo, just two panes.
 
@@ -22,7 +22,7 @@ CLUSTER_IP=$(kubectl get svc vllm-demo -o jsonpath='{.spec.clusterIP}')
 ## What to show
 
 **Pane A** - send requests to vLLM in a loop (curl the ClusterIP by IP, as
-in folder 05):
+in folder 07):
 
 ```
 while true; do
@@ -49,7 +49,7 @@ shown with the metric the GPU Operator manages for you.
 
 - **Run `curl` on the host, not inside the exporter pod.** That image ships
   only the `dcgm-exporter` binary, with no shell or `curl`.
-- **The metric refresh interval must be 2s**, set by folder 03's install
+- **The metric refresh interval must be 2s**, set by folder 05's install
   (`DCGM_EXPORTER_INTERVAL=2000`). The default is 30s, which makes the
   value look stuck under load. If you installed without that flag, patch it
   live:
@@ -67,6 +67,4 @@ shown with the metric the GPU Operator manages for you.
 asciinema rec demo.cast -c ./demo-tmux.sh
 ```
 
-`demo-tmux.sh` opens the two panes this demo needs, both SSH'd into folder
-03's instance via its reused SSH state. Bring folder 03 up and start folder
-05's vLLM Deployment first, or `wait-for-ssh.sh` tells you to.
+`demo-tmux.sh` opens the two panes this demo needs, both SSH'd into folder 05's instance via its reused SSH state. Bring folder 05 up and start folder 07's vLLM Deployment first, or `wait-for-ssh.sh` tells you to.

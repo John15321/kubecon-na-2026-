@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # tmux session split top/bottom, so one asciinema recording shows both
-# panes. Unlike folders 01/02 (QEMU serial console), EC2 has no live boot
+# panes. Unlike folders 01-04 (QEMU serial console), EC2 has no live boot
 # log, so the top pane shows only run.sh's launch output.
 #
 # Top pane:    run.sh (launches the instance, prints its public IP)

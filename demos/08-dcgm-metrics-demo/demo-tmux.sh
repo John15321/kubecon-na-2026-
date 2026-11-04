@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Folder 06 is inherently a two-pane demo: fire vLLM requests in one pane
+# Folder 08 is inherently a two-pane demo: fire vLLM requests in one pane
 # and watch GPU utilization react in the other. Both panes SSH into folder
 # 03's instance (no infra of its own). Each waits for sshd, then drops you
 # at a prompt so you type the commands live -- see README.md:
-#   Pane A: a curl loop against vLLM (folder 05 must be running)
+#   Pane A: a curl loop against vLLM (folder 07 must be running)
 #   Pane B: watch -n1 the dcgm-exporter /metrics for DCGM_FI_DEV_GPU_UTIL
 #
-# Precondition: folder 03 is up, GPU Operator installed, and folder 05's
+# Precondition: folder 05 is up, GPU Operator installed, and folder 07's
 # vLLM Deployment is already Running. Record with:
 #   asciinema rec demo.cast -c ./demo-tmux.sh
 

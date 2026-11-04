@@ -1,4 +1,4 @@
-# 02 - Kubernetes on Flatcar
+# 04 - Kubernetes on Flatcar
 
 Boot a Flatcar VM and bring up a single-node kubeadm cluster. Flatcar has
 no package manager, so `kubeadm`, `kubelet`, and `kubectl` come from a

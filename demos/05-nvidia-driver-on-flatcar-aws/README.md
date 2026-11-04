@@ -1,10 +1,10 @@
-# 03 - NVIDIA driver on Flatcar (AWS)
+# 05 - NVIDIA driver on Flatcar (AWS)
 
 Boot a single `g4dn.xlarge` EC2 instance (NVIDIA **T4**) running Flatcar's
 alpha channel, with the NVIDIA driver provided by a **systemd-sysext**.
 Bring up a single-node kubeadm cluster and install the NVIDIA GPU Operator.
 
-This is the base for the GPU demos. Folders 05, 06, and 07 run on this same
+This is the base for the GPU demos. Folders 07, 08, and 09 run on this same
 instance.
 
 ## Cost and teardown
@@ -15,7 +15,7 @@ shared instance. Run `./teardown.sh` once, after the whole session.
 
 ## Prerequisites
 
-- Same tools as folder 02, plus the `aws` CLI, authenticated.
+- Same tools as folder 04, plus the `aws` CLI, authenticated.
 - Permission to create EC2 instances, security groups, and key pairs.
 - `g4dn`/`G` instance quota in your region. If `run.sh` fails on quota,
   request an increase for "Running On-Demand G and VT instances".
@@ -79,7 +79,7 @@ prompt. `tmux kill-session -t flatcar-nvidia-demo` kills a stuck session.
    - `driver.enabled=false` and `toolkit.enabled=false`: Flatcar's sysext
      already provides these. The GPU Operator must not install its own.
    - `DCGM_EXPORTER_INTERVAL=2000`: sets the metric refresh to 2s, which
-     folder 06 needs. The default is 30s.
+     folder 08 needs. The default is 30s.
    - `--timeout 10m`: the first install pulls several images. A `context
      deadline exceeded` message means `--wait` timed out, not that the
      install failed. Check `kubectl get pods -n gpu-operator`.
@@ -110,7 +110,7 @@ prompt. `tmux kill-session -t flatcar-nvidia-demo` kills a stuck session.
 ## Notes
 
 - `config.bu` is the Butane source shown on stage. It stages
-  `vllm-demo.yaml` (folder 05) and `triton-demo.yaml` (folder 07) onto the
+  `vllm-demo.yaml` (folder 07) and `triton-demo.yaml` (folder 09) onto the
   node, so those folders' `kubectl apply` commands need no copy step. Keep
   those inline copies in sync with the folders' own files by hand.
 - `ssh/aws-state.json` (gitignored) records the instance id, security

@@ -8,9 +8,9 @@ Conventions:
 
 - `$` runs on your laptop.
 - `core@...$` runs on the Flatcar node over SSH.
-- Folders 01 and 02 run locally under QEMU (no cost).
-- Folders 03, 05, 06, 07 share one AWS GPU instance (folder 03 creates it).
-- Folder 04 uses its own separate AWS GPU instance.
+- Folders 01 through 04 run locally under QEMU (no cost).
+- Folders 05, 07, 08, 09 share one AWS GPU instance (folder 05 creates it).
+- Folder 06 uses its own separate AWS GPU instance.
 
 ---
 
@@ -30,7 +30,50 @@ core@flatcar ~$ cat /etc/os-release
 
 ---
 
-## 02 - Kubernetes on Flatcar
+## 02 - Ignition doing real first-boot work
+
+```
+$ ./run.sh                 # boot; nginx forwarded to host :8080 (Ctrl-A X quits)
+$ ./demo-tmux.sh           # boot + SSH in two panes
+```
+
+On the node:
+
+```
+core@flatcar-demo ~$ hostname                           # set declaratively
+core@flatcar-demo ~$ groups demo                        # the second user, in docker + sudo
+core@flatcar-demo ~$ docker ps                          # nginx-demo running
+core@flatcar-demo ~$ journalctl -u hello-world.service  # oneshot container, ran once
+core@flatcar-demo ~$ /opt/bin/welcome.sh                # staged script
+```
+
+From your laptop (nginx is port-forwarded):
+
+```
+$ curl http://localhost:8080
+```
+
+---
+
+## 03 - System extensions (sysexts)
+
+```
+$ ./run.sh                 # boot; Ignition fetches the k8s sysext (needs network)
+$ ./demo-tmux.sh           # boot + SSH in two panes
+```
+
+On the node:
+
+```
+core@flatcar-sysext-demo ~$ systemd-sysext status            # kubernetes extension merged
+core@flatcar-sysext-demo ~$ which kubeadm kubelet kubectl    # present, no package manager
+core@flatcar-sysext-demo ~$ kubeadm version
+core@flatcar-sysext-demo ~$ cat /etc/os-release              # base OS unchanged underneath
+```
+
+---
+
+## 04 - Kubernetes on Flatcar
 
 ```
 $ ./reset.sh               # optional: start from a fresh cluster
@@ -52,7 +95,7 @@ core@flatcar-demo ~$ kubectl apply -f app-demo.yaml
 
 ---
 
-## 03 - GPU node (shared by 05, 06, 07)
+## 05 - GPU node (shared by 07, 08, 09)
 
 ```
 $ AWS_PROFILE=<name> ./run.sh      # create the g4dn.xlarge instance (billed)
@@ -87,7 +130,7 @@ core@flatcar-gpu-demo ~$ kubectl get node --show-labels | tr ',' '\n' | grep -i 
 
 ---
 
-## 05 - vLLM inference
+## 07 - vLLM inference
 
 ```
 core@flatcar-gpu-demo ~$ kubectl apply -f vllm-demo.yaml
@@ -109,7 +152,7 @@ core@flatcar-gpu-demo ~$ kubectl scale deployment vllm-demo --replicas=1
 
 ---
 
-## 06 - DCGM GPU metrics (run with 05)
+## 08 - DCGM GPU metrics (run with 07)
 
 ```
 core@flatcar-gpu-demo ~$ DCGM_POD_IP=$(kubectl get pods -n gpu-operator -l app=nvidia-dcgm-exporter -o jsonpath='{.items[0].status.podIP}')
@@ -136,7 +179,7 @@ core@flatcar-gpu-demo ~$ watch -n1 "curl -s http://${DCGM_POD_IP}:9400/metrics |
 
 ---
 
-## 07 - Triton inference
+## 09 - Triton inference
 
 ```
 core@flatcar-gpu-demo ~$ kubectl apply -f triton-demo.yaml      # server + client in one apply
@@ -152,7 +195,7 @@ core@flatcar-gpu-demo ~$ kubectl delete job triton-classify && kubectl apply -f 
 
 ---
 
-## 04 - Driver upgrade in place (separate instance)
+## 06 - Driver upgrade in place (separate instance)
 
 ```
 $ AWS_PROFILE=<name> ./run.sh      # create a second, older instance (billed)
@@ -176,8 +219,8 @@ core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 580 bran
 ## Teardown (stop AWS billing)
 
 ```
-$ cd 03-nvidia-driver-on-flatcar-aws && ./teardown.sh
-$ cd 04-nvidia-driver-upgrade-in-place && ./teardown.sh
+$ cd 05-nvidia-driver-on-flatcar-aws && ./teardown.sh
+$ cd 06-nvidia-driver-upgrade-in-place && ./teardown.sh
 ```
 
 ---

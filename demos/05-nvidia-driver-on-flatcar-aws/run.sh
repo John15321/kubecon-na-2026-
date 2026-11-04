@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# 03 - Boot a g4dn.xlarge (NVIDIA T4) EC2 instance on Flatcar's alpha
+# 05 - Boot a g4dn.xlarge (NVIDIA T4) EC2 instance on Flatcar's alpha
 # channel, with the NVIDIA driver from a sysext. Ignition brings up a
-# single-node kubeadm cluster, same pattern as folder 02.
+# single-node kubeadm cluster, same pattern as folder 04.
 #
 # This creates REAL BILLED AWS INFRASTRUCTURE (about $0.53/hr). Run
-# ./teardown.sh when done. It is the only teardown for folders 03-07, which
+# ./teardown.sh when done. It is the only teardown for folders 05-09, which
 # all share this instance.
 #
 # Re-running is safe: if ssh/aws-state.json points at a running instance,
@@ -61,8 +61,8 @@ CALLER_IDENTITY="$(aws sts get-caller-identity --output json)" || {
     echo "(set AWS_PROFILE=<name> to pick a specific one, e.g. AWS_PROFILE=kubecon-demo ./run.sh)" >&2
     exit 1
 }
-ACCOUNT_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Account'])" <<< "$CALLER_IDENTITY")"
-CALLER_ARN="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Arn'])" <<< "$CALLER_IDENTITY")"
+ACCOUNT_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Account'])" < "$CALLER_IDENTITY")"
+CALLER_ARN="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Arn'])" < "$CALLER_IDENTITY")"
 echo "    Account:  ${ACCOUNT_ID}"
 echo "    Identity: ${CALLER_ARN}"
 echo "    Region:   ${REGION}"
@@ -161,7 +161,7 @@ PUBLIC_IP="$(aws ec2 describe-instances --region "$REGION" --instance-ids "$INST
     --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)"
 
 echo "==> Instance running: ${INSTANCE_ID} (${PUBLIC_IP})"
-echo "    Ignition + kubeadm init run automatically on first boot (same as folder 02)."
+echo "    Ignition + kubeadm init run automatically on first boot (same as folder 04)."
 echo "    CNI and GPU Operator are NOT automatic -- see README.md for those steps."
 echo "    Once SSH is reachable (see wait-for-ssh.sh / demo-tmux.sh):"
 echo "      ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@${PUBLIC_IP}"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Terminates this folder's own EC2 instance and deletes its security group.
-# Independent of folder 03's teardown. Run it when done with folder 04 to
+# Independent of folder 05's teardown. Run it when done with folder 06 to
 # stop billing.
 
 set -euo pipefail

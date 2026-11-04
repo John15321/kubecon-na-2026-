@@ -1,0 +1,32 @@
+variant: flatcar
+version: 1.0.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - __SSH_PUBLIC_KEY__
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: flatcar-sysext-demo
+    # The Kubernetes system extension: a squashfs image carrying kubeadm,
+    # kubelet, and kubectl. Ignition fetches it over the network at
+    # provisioning time and drops it where systemd-sysext looks. This is how
+    # you add software to Flatcar, which has a read-only /usr and no package
+    # manager. Pinned to v1.37.1 to match folder 04.
+    #
+    # Offline fallback: if the VM has no network at boot, delete this file
+    # entry, boot anyway, then copy the .raw in by hand (see README.md).
+    - path: /etc/extensions/kubernetes.raw
+      mode: 0644
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.37.1-x86-64.raw
+systemd:
+  units:
+    # Merges every image under /etc/extensions into /usr at boot. This is
+    # what makes kubeadm, kubelet, and kubectl appear on the read-only OS.
+    - name: systemd-sysext.service
+      enabled: true

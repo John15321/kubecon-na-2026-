@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 02 - Single-node kubeadm cluster on Flatcar, with kubeadm, kubelet, and
+# 04 - Single-node kubeadm cluster on Flatcar, with kubeadm, kubelet, and
 # kubectl installed via systemd-sysext.
 #
 # Steps:

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
-# 04 - Boot a SEPARATE g4dn.xlarge EC2 instance (not folder 03's) on
+# 06 - Boot a SEPARATE g4dn.xlarge EC2 instance (not folder 05's) on
 # Flatcar alpha build 4820.0.1, driver branch 570. The demo updates it to
 # the current build, where the driver branch moves to 580.
 #
-# A separate instance keeps folder 03's Kubernetes and GPU Operator state
+# A separate instance keeps folder 05's Kubernetes and GPU Operator state
 # out of the update cycle. This instance has only Flatcar and the driver.
 #
 # This creates REAL BILLED AWS INFRASTRUCTURE, a second g4dn.xlarge on top
-# of folder 03's (about $0.53/hr). Run this folder's own ./teardown.sh when
-# done. It is independent of folder 03's teardown.
+# of folder 05's (about $0.53/hr). Run this folder's own ./teardown.sh when
+# done. It is independent of folder 05's teardown.
 #
 # Re-running is safe: if ssh/aws-state.json points at a running instance,
 # this reuses it instead of launching a second one.
@@ -25,7 +25,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 REGION="${AWS_REGION:-us-east-1}"
 AMI_ID="ami-057a7c2cbe194a97b"   # Flatcar-alpha-4820.0.1-hvm, us-east-1 -- confirmed via describe-images
-INSTANCE_TYPE="g4dn.xlarge"       # NVIDIA T4 (Turing) -- same as folder 03
+INSTANCE_TYPE="g4dn.xlarge"       # NVIDIA T4 (Turing) -- same as folder 05
 SSH_KEY_DIR="ssh"
 SSH_KEY="${SSH_KEY_DIR}/demo_ed25519"
 BUTANE_TEMPLATE="config.bu"
@@ -53,8 +53,8 @@ CALLER_IDENTITY="$(aws sts get-caller-identity --output json)" || {
     echo "(set AWS_PROFILE=<name> to pick a specific one, e.g. AWS_PROFILE=kubecon-demo ./run.sh)" >&2
     exit 1
 }
-ACCOUNT_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Account'])" <<< "$CALLER_IDENTITY")"
-CALLER_ARN="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Arn'])" <<< "$CALLER_IDENTITY")"
+ACCOUNT_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Account'])" < "$CALLER_IDENTITY")"
+CALLER_ARN="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Arn'])" < "$CALLER_IDENTITY")"
 echo "    Account:  ${ACCOUNT_ID}"
 echo "    Identity: ${CALLER_ARN}"
 echo "    Region:   ${REGION}"
@@ -124,7 +124,7 @@ fi
 
 echo "==> About to launch ${INSTANCE_TYPE} (${AMI_ID}, Flatcar alpha 4820.0.1) in ${REGION}"
 echo "    under account ${ACCOUNT_ID} (${CALLER_ARN}), profile '${AWS_PROFILE:-default}'."
-echo "    This is a SECOND instance, separate from folder 03's. Billing starts on"
+echo "    This is a SECOND instance, separate from folder 05's. Billing starts on"
 echo "    confirmation (~\$0.53/hr on-demand for g4dn.xlarge). Run ./teardown.sh when done."
 if [[ "${AWS_SKIP_CONFIRM:-0}" != "1" ]]; then
     read -r -p "    Proceed? [y/N] " REPLY

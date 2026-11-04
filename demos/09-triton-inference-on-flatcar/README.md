@@ -1,20 +1,20 @@
-# 07 - Triton inference on Flatcar (optional)
+# 09 - Triton inference on Flatcar (optional)
 
 Serve a vision model on the GPU with NVIDIA Triton. This is the optional
 "Flatcar is not locked to one inference framework" beat: a different model
-and a different API from folder 05's LLM. Skip this folder if that message
+and a different API from folder 07's LLM. Skip this folder if that message
 is not worth the extra setup. Nothing else depends on it.
 
-This folder has no instance of its own. It runs on folder 03's instance.
-Folder 03's cluster must be Ready with the GPU Operator installed.
+This folder has no instance of its own. It runs on folder 05's instance.
+Folder 05's cluster must be Ready with the GPU Operator installed.
 
 - **Model:** DenseNet-121, image classification, in ONNX format.
-- `triton-demo.yaml` is staged onto the node by folder 03's Ignition, so
+- `triton-demo.yaml` is staged onto the node by folder 05's Ignition, so
   `kubectl apply` needs no copy step.
 
 ## Why the client is a program, not a curl
 
-vLLM (folder 05) speaks an OpenAI-compatible API, so a plain `curl` works.
+vLLM (folder 07) speaks an OpenAI-compatible API, so a plain `curl` works.
 Triton wants a raw tensor payload matching the model's input shape, so the
 client is a small program (`classify.py`): it downloads an image,
 preprocesses it to the model's `224x224x3` input, sends it, and prints the
@@ -71,7 +71,7 @@ kubectl delete job triton-classify && kubectl apply -f triton-demo.yaml
   (`nvcr.io/nvidia/tritonserver:<tag>-py3-sdk`, which already ships
   `tritonclient` and numpy).
 - **Pin the `tritonserver` image tag** before recording. It is `24.08-py3`
-  now. Keep folder 03's staged copy of `triton-demo.yaml` in sync if you
+  now. Keep folder 05's staged copy of `triton-demo.yaml` in sync if you
   change this file.
 
 ## Playback
@@ -80,6 +80,6 @@ kubectl delete job triton-classify && kubectl apply -f triton-demo.yaml
 asciinema rec demo.cast -c ./demo-tmux.sh
 ```
 
-`demo-tmux.sh` and `wait-for-ssh.sh` reuse folder 03's SSH key and instance
+`demo-tmux.sh` and `wait-for-ssh.sh` reuse folder 05's SSH key and instance
 state, wait for SSH, and give you a prompt to type the commands live. Bring
-folder 03 up first, or `wait-for-ssh.sh` tells you to.
+folder 05 up first, or `wait-for-ssh.sh` tells you to.
