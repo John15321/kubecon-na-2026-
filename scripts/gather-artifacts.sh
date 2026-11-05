@@ -11,5 +11,7 @@ if ! ls build/*.pdf > /dev/null 2>&1; then
 fi
 
 cp build/*.pdf artifacts/
+# PowerPoint files are optional (need LibreOffice to build)
+cp build/*.pptx artifacts/ 2>/dev/null || true
 echo "✅ Artifacts ready:"
 ls -lh artifacts/

@@ -3,6 +3,7 @@
  * Flatcar-branded Marp theme. The actual rules are split across
  * three partial themes in `themes/flatcar/`:
  *
+ *   fonts.css    embedded Overpass font
  *   base.css     palette + default content slide (white + navy title bar)
  *   dark.css     dark navy layouts (cover, lead, section, closing, quote)
  *   sidebar.css  rail layouts (sidebar, sidebar whoami, agenda)
@@ -25,6 +26,7 @@
  */
 
 @import 'default';
+@import 'flatcar-fonts';
 @import 'flatcar-base';
 @import 'flatcar-dark';
 @import 'flatcar-sidebar';

@@ -122,6 +122,8 @@ nuke:
 native-build:
 	@echo "📑 Building Marp slides (native)..."
 	@$(SCRIPTS_DIR)/build.sh
+	@if command -v soffice >/dev/null 2>&1; then $(MAKE) --no-print-directory pptx-auto; \
+	else echo "ℹ️  LibreOffice not found, skipping the PowerPoint build (install it for build/slides-auto.pptx)"; fi
 
 native-clean:
 	@echo "🧹 Cleaning all build files (native)..."
