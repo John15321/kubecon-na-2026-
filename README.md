@@ -33,9 +33,6 @@ make watch        # rebuilds on save
 make preview      # live browser preview
 ```
 
-`make pptx-auto` converts the deck to an editable PowerPoint at
-`build/slides-auto.pptx` (experimental, needs LibreOffice; expect small glitches).
-
 See `make help` for the full target list.
 
 ## Layout

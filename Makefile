@@ -1,7 +1,7 @@
 # Makefile for Marp Slides, works with Podman (preferred) or Docker.
 
 .PHONY: all build clean artifacts help test ci-build ci-artifacts setup \
-        native-build pptx-auto native-clean native-artifacts watch preview shell \
+        native-build native-clean native-artifacts watch preview shell \
         image image-rebuild nuke
 
 # Configuration
@@ -122,8 +122,6 @@ nuke:
 native-build:
 	@echo "📑 Building Marp slides (native)..."
 	@$(SCRIPTS_DIR)/build.sh
-	@if command -v soffice >/dev/null 2>&1; then $(MAKE) --no-print-directory pptx-auto; \
-	else echo "ℹ️  LibreOffice not found, skipping the PowerPoint build (install it for build/slides-auto.pptx)"; fi
 
 native-clean:
 	@echo "🧹 Cleaning all build files (native)..."
@@ -132,11 +130,6 @@ native-clean:
 native-artifacts: native-build
 	@echo "📦 Gathering artifacts (native)..."
 	@$(SCRIPTS_DIR)/gather-artifacts.sh
-
-# Editable PowerPoint from slides.md via Marp (experimental, needs LibreOffice).
-pptx-auto:
-	@mkdir -p build
-	@npx --yes @marp-team/marp-cli@4.1.2 --pptx --pptx-editable --html --allow-local-files --no-stdin slides.md -o build/slides-auto.pptx --theme-set themes
 
 # Authoring helpers, always native (need interactive Node + browser).
 watch:
@@ -175,7 +168,6 @@ help:
 	@echo "  native-build      - Build without a container"
 	@echo "  native-clean      - Clean without a container"
 	@echo "  native-artifacts  - Gather artifacts without a container"
-	@echo "  pptx-auto         - Editable PowerPoint (build/slides-auto.pptx, needs LibreOffice)"
 	@echo ""
 	@echo "👀 Authoring (native only):"
 	@echo "  watch     - Rebuild on save (npm run watch)"
