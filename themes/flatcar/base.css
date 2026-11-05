@@ -482,3 +482,6 @@ section p:has(> img[alt*="pane-"]) {
   max-width: 100%;
   object-fit: contain;
 }
+
+/* Titles are always bold, whatever a layout sets. */
+section :is(h1, h2, h3, h4, h5, h6) { font-weight: 700 !important; }
