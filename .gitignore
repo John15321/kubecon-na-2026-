@@ -24,3 +24,6 @@ npm-debug.log*
 assets/photo/group_photos/original/
 assets/logos/external/other/original/
 local-scripts/
+
+# Auto-converted PowerPoint
+build/slides-auto.pptx
