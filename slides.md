@@ -20,7 +20,7 @@ author: Jan Bronicki, Sayan Chowdhury
 
 <!-- _class: sidebar -->
 
-# whoarewe
+# Who are we
 
 <div class="pin-tr" style="display: flex; gap: 20px; align-items: center">
   <img class="img-h-xs" src="./assets/logos/external/flatcar-logo-other.png" alt="Flatcar">
