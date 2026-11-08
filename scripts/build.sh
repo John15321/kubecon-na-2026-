@@ -55,3 +55,17 @@ else
     echo "❌ Build failed: ${OUTPUT} not produced"
     exit 1
 fi
+
+# PowerPoint next to the PDF, generated from the same slides.md. Uses
+# python-pptx and playwright from the system (container image) or via uv on
+# the host; needs Chrome or Chromium. Skipped with a note when missing.
+if [ -f scripts/build-pptx.py ]; then
+    export MARP_CMD
+    if python3 -c "import pptx, playwright" > /dev/null 2>&1; then
+        python3 scripts/build-pptx.py
+    elif command -v uv > /dev/null 2>&1; then
+        uv run --with python-pptx --with playwright python scripts/build-pptx.py
+    else
+        echo "ℹ️  Skipping PowerPoint (needs python-pptx and playwright, or uv)"
+    fi
+fi

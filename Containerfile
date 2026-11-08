@@ -12,11 +12,13 @@ USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       bash make fontconfig \
+      python3 python3-pip \
       fonts-inter \
       fonts-jetbrains-mono \
       fonts-firacode \
       fonts-noto-core && \
     fc-cache -f && \
+    pip3 install --no-cache-dir --break-system-packages python-pptx playwright && \
     rm -rf /var/lib/apt/lists/*
 
 # The base image installs `marp` as the unprivileged `marp` user under

@@ -90,12 +90,16 @@ section.sidebar td {
 section.sidebar > img,
 section.sidebar > p > img {
   display: block;
-  width: 100%;
   max-width: 100%;
-  height: auto;
   max-height: 480px;
   object-fit: contain;
   margin: 8px 0;
+}
+/* Fill the pane by default, but let img-* size utilities keep their size. */
+section.sidebar > img:not([class*="img-"]):not([alt*="img-"]),
+section.sidebar > p > img:not([class*="img-"]):not([alt*="img-"]) {
+  width: 100%;
+  height: auto;
 }
 
 /* ---------------- SIDEBAR.whoami (bio variant) ----------------
@@ -310,6 +314,8 @@ section:is(.sidebar, .agenda) img:is(
 ) {
   left: calc(var(--rail-width) + 60px);
   right: 60px;
+  margin-left: auto;
+  margin-right: auto;
   max-width: calc(100% - var(--rail-width) - 120px);
   max-height: 220px;
   width: auto;

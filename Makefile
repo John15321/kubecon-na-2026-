@@ -1,7 +1,7 @@
 # Makefile for Marp Slides, works with Podman (preferred) or Docker.
 
 .PHONY: all build clean artifacts help test ci-build ci-artifacts setup \
-        native-build native-clean native-artifacts watch preview shell \
+        native-build pptx native-clean native-artifacts watch preview shell \
         image image-rebuild nuke
 
 # Configuration
@@ -16,7 +16,7 @@ ENGINE     ?= $(shell command -v podman > /dev/null 2>&1 && echo podman || (comm
 COMPOSE    ?= $(ENGINE) compose
 
 # Detect whether we're already inside the build container (skip wrapping).
-CONTAINER_ENV := $(shell [ -f /run/.containerenv ] && echo true || echo false)
+CONTAINER_ENV := $(shell [ -f /run/.containerenv ] || [ -f /.dockerenv ] && echo true || echo false)
 
 # Function: run a command inside the slides-builder container (or natively if
 # we're already inside it). Bails out with install instructions if no container
@@ -87,10 +87,15 @@ test: build
 	@test -f build/slides.pdf && echo "✅ PDF generated successfully" || (echo "❌ PDF generation failed" && exit 1)
 
 # CI pipelines.
-ci-build: clean build test
+# Recipes call $(MAKE) in order so `make -j` cannot run clean during a build.
+ci-build:
+	@$(MAKE) clean
+	@$(MAKE) test
 	@echo "🚀 CI build completed successfully"
 
-ci-artifacts: ci-build artifacts
+ci-artifacts:
+	@$(MAKE) ci-build
+	$(call run-in-container,$(SCRIPTS_DIR)/gather-artifacts.sh,Gathering artifacts)
 	@echo "📦 CI artifacts prepared"
 
 # Open an interactive shell in the build container.
@@ -126,6 +131,10 @@ native-build:
 native-clean:
 	@echo "🧹 Cleaning all build files (native)..."
 	@$(SCRIPTS_DIR)/clean.sh
+
+# PowerPoint with editable text, generated from slides.md (needs uv and Chrome).
+pptx:
+	@uv run --with python-pptx --with playwright python $(SCRIPTS_DIR)/build-pptx.py
 
 native-artifacts: native-build
 	@echo "📦 Gathering artifacts (native)..."
@@ -168,6 +177,7 @@ help:
 	@echo "  native-build      - Build without a container"
 	@echo "  native-clean      - Clean without a container"
 	@echo "  native-artifacts  - Gather artifacts without a container"
+	@echo "  pptx              - PowerPoint with editable text (build/slides-native.pptx, needs uv + Chrome)"
 	@echo ""
 	@echo "👀 Authoring (native only):"
 	@echo "  watch     - Rebuild on save (npm run watch)"

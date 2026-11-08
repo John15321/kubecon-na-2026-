@@ -25,4 +25,7 @@ assets/photo/group_photos/original/
 assets/logos/external/other/original/
 local-scripts/
 
-# Auto-converted PowerPoint
+# Native PowerPoint build
+build/slides-native.pptx
+build/pptx-assets/
+build/pptx-source.html

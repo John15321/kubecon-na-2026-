@@ -72,9 +72,20 @@ draw.io, plain PNGs / screenshots) work too: just drop the exported
 image under `assets/` and `<img>` it in. See [MANUAL.md](MANUAL.md#diagrams-d2)
 for details.
 
+## PowerPoint
+
+`make build` (and `make pptx`) also produce `build/slides-native.pptx`, generated
+from `slides.md` with nothing to keep in sync by hand. `scripts/build-pptx.py`
+renders each slide in headless Chrome and builds the PowerPoint from a picture
+of the slide plus native, editable text boxes on top. Wording, fonts and colours
+stay editable; cards, bands and diagrams are part of the picture. Needs
+[uv](https://docs.astral.sh/uv/) (or python-pptx and playwright) and Chrome or
+Chromium. The file refers to the Overpass font by name, so install Overpass to
+see it as designed.
+
 ## Releases
 
-Pushing a tag `v*` triggers the CI workflow to attach `slides.pdf` to a GitHub Release.
+Pushing a tag `v*` triggers the CI workflow to attach `slides.pdf` and `slides-native.pptx` to a GitHub Release.
 
 ---
 

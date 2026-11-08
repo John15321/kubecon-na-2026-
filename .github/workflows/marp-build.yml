@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
+      - name: Install uv (for the PowerPoint build)
+        uses: astral-sh/setup-uv@v5
+
       - name: Build slides and gather artifacts
         run: |
           # Make scripts executable
@@ -55,6 +58,7 @@ jobs:
           name: marp-slides-${{ github.run_number }}
           path: |
             artifacts/*.pdf
+            artifacts/*.pptx
           retention-days: 30
 
       - name: Create Release and Upload Assets
@@ -63,6 +67,7 @@ jobs:
         with:
           files: |
             artifacts/*.pdf
+            artifacts/*.pptx
           name: "Marp Slides ${{ github.ref_name }}"
           body: |
             ## Marp Slides Release ${{ github.ref_name }}
