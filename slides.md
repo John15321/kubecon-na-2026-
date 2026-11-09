@@ -369,6 +369,14 @@ No login. No post-boot setup. The machine came up already doing its job.
 
 ---
 
+<!-- _class: section -->
+
+# What's Up With That Immutability Thing?
+
+## Immutable by design
+
+---
+
 <!-- _class: sidebar -->
 
 # Immutable by Design
@@ -1038,6 +1046,11 @@ After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing
   <a href="https://flatcar.org"><img src="assets/logos/flatcar-logotype/icon/white/flatcar-icon-white.svg" alt=""> flatcar.org</a>
   <a href="https://github.com/flatcar"><img src="assets/logos/external/github-white.png" alt=""> github.com/flatcar</a>
   <a href="https://chat.flatcar.org"><img src="assets/logos/external/discord-white.svg" alt=""> chat.flatcar.org</a>
+</p>
+
+<p class="closing-meetings">
+  <span><strong>Find us</strong> · Project Pavilion, kiosk P-8A, Hall 5</span>
+  <span><strong>Shifts (MST)</strong> · Tue 3-7 PM · Wed 1:55-5 PM · Thu 12:25-2 PM</span>
 </p>
 
 <p class="closing-meetings">

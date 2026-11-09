@@ -61,6 +61,12 @@ else
     exit 1
 fi
 
+# Picture-only PowerPoint: every slide is a PNG, so it looks exactly like the
+# PDF on any machine (not editable). Marp renders it with its own Chromium.
+PPTX_IMG="${PPTX_IMG:-build/slides.pptx}"
+echo "🖼️  Building picture PowerPoint: ${PPTX_IMG}"
+${MARP_CMD} --pptx --html --allow-local-files --no-stdin "${INPUT}" -o "${PPTX_IMG}" --theme-set themes
+
 # PowerPoint next to the PDF, generated from the same slides.md. Uses
 # python-pptx and playwright from the system (container image) or via uv on
 # the host; needs Chrome or Chromium. Skipped with a note when missing.

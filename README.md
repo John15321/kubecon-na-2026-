@@ -83,9 +83,14 @@ stay editable; cards, bands and diagrams are part of the picture. Needs
 Chromium. The file refers to the Overpass font by name, so install Overpass to
 see it as designed.
 
+`make build` also produces `build/slides.pptx`, a picture-only deck where every
+slide is a PNG rendered by Marp. It matches the PDF exactly and needs no fonts
+installed, but its text cannot be edited. Use `slides-native.pptx` when you
+need to edit.
+
 ## Releases
 
-Pushing a tag `v*` triggers the CI workflow to attach `slides.pdf` and `slides-native.pptx` to a GitHub Release.
+Pushing a tag `v*` triggers the CI workflow to attach `slides.pdf`, `slides.pptx` and `slides-native.pptx` to a GitHub Release.
 
 ---
 

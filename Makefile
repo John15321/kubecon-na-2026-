@@ -1,7 +1,7 @@
 # Makefile for Marp Slides, works with Podman (preferred) or Docker.
 
 .PHONY: all build clean artifacts help test ci-build ci-artifacts setup \
-        native-build pptx native-clean native-artifacts watch preview shell \
+        native-build pptx native-clean native-artifacts pptx-images watch preview shell \
         image image-rebuild nuke
 
 # Configuration
@@ -133,8 +133,13 @@ native-clean:
 	@$(SCRIPTS_DIR)/clean.sh
 
 # PowerPoint with editable text, generated from slides.md (needs uv and Chrome).
-pptx:
+pptx: pptx-images
 	@uv run --with python-pptx --with playwright python $(SCRIPTS_DIR)/build-pptx.py
+
+# Picture-only PowerPoint (every slide a PNG), written to build/slides.pptx.
+pptx-images:
+	@mkdir -p build
+	@npx --yes @marp-team/marp-cli@4.1.2 --pptx --html --allow-local-files --no-stdin slides.md -o build/slides.pptx --theme-set themes
 
 native-artifacts: native-build
 	@echo "📦 Gathering artifacts (native)..."
@@ -177,7 +182,7 @@ help:
 	@echo "  native-build      - Build without a container"
 	@echo "  native-clean      - Clean without a container"
 	@echo "  native-artifacts  - Gather artifacts without a container"
-	@echo "  pptx              - PowerPoint with editable text (build/slides-native.pptx, needs uv + Chrome)"
+	@echo "  pptx              - PowerPoint with editable text (build/slides-native.pptx, needs uv + Chrome); also builds picture-only build/slides.pptx (pptx-images)"
 	@echo ""
 	@echo "👀 Authoring (native only):"
 	@echo "  watch     - Rebuild on save (npm run watch)"
