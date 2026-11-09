@@ -8,9 +8,9 @@ Conventions:
 
 - `$` runs on your laptop.
 - `core@...$` runs on the Flatcar node over SSH.
-- Folders 01 through 04 run locally under QEMU (no cost).
-- Folders 05, 07, 08, 09 share one AWS GPU instance (folder 05 creates it).
-- Folder 06 uses its own separate AWS GPU instance.
+- Folders 01 through 03 run locally under QEMU (no cost).
+- Folders 04, 06, 07, 08 share one AWS GPU instance (folder 04 creates it).
+- Folder 05 uses its own separate AWS GPU instance.
 
 ---
 
@@ -25,37 +25,29 @@ SSH in from a second terminal:
 
 ```
 $ ssh -i ssh/demo_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 core@localhost
-core@flatcar ~$ cat /etc/os-release
 ```
 
----
-
-## 02 - Ignition doing real first-boot work
+Ignition did the work:
 
 ```
-$ ./run.sh                 # boot; nginx forwarded to host :8080 (Ctrl-A X quits)
-$ ./demo-tmux.sh           # boot + SSH in two panes
-```
-
-On the node:
-
-```
+core@flatcar-demo ~$ cat /etc/os-release                # this is Flatcar
 core@flatcar-demo ~$ hostname                           # set declaratively
 core@flatcar-demo ~$ groups demo                        # the second user, in docker + sudo
-core@flatcar-demo ~$ docker ps                          # nginx-demo running
-core@flatcar-demo ~$ journalctl -u hello-world.service  # oneshot container, ran once
+core@flatcar-demo ~$ journalctl -u hello-world.service  # oneshot container, ran once on boot
 core@flatcar-demo ~$ /opt/bin/welcome.sh                # staged script
 ```
 
-From your laptop (nginx is port-forwarded):
+The OS is immutable:
 
 ```
-$ curl http://localhost:8080
+core@flatcar-demo ~$ mount | grep ' /usr '              # read-only
+core@flatcar-demo ~$ sudo touch /usr/test               # fails: read-only file system
+core@flatcar-demo ~$ echo ok | sudo tee /etc/test       # /etc is writable
 ```
 
 ---
 
-## 03 - System extensions (sysexts)
+## 02 - System extensions (sysexts)
 
 ```
 $ ./run.sh                 # boot; Ignition fetches the k8s sysext (needs network)
@@ -73,7 +65,7 @@ core@flatcar-sysext-demo ~$ cat /etc/os-release              # base OS unchanged
 
 ---
 
-## 04 - Kubernetes on Flatcar
+## 03 - Kubernetes on Flatcar
 
 ```
 $ ./reset.sh               # optional: start from a fresh cluster
@@ -95,7 +87,7 @@ core@flatcar-demo ~$ kubectl apply -f app-demo.yaml
 
 ---
 
-## 05 - GPU node (shared by 07, 08, 09)
+## 04 - GPU node (shared by 06, 07, 08)
 
 ```
 $ AWS_PROFILE=<name> ./run.sh      # create the g4dn.xlarge instance (billed)
@@ -130,7 +122,28 @@ core@flatcar-gpu-demo ~$ kubectl get node --show-labels | tr ',' '\n' | grep -i 
 
 ---
 
-## 07 - vLLM inference
+## 05 - Driver upgrade in place (separate instance)
+
+```
+$ AWS_PROFILE=<name> ./run.sh      # create a second, older instance (billed)
+$ ./demo-tmux.sh                   # launch + SSH in two panes
+```
+
+On the node:
+
+```
+core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
+core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 570 branch
+core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -status
+core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -update      # updates and reboots
+# SSH back in after reboot:
+core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
+core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 580 branch
+```
+
+---
+
+## 06 - vLLM inference
 
 ```
 core@flatcar-gpu-demo ~$ kubectl apply -f vllm-demo.yaml
@@ -152,7 +165,7 @@ core@flatcar-gpu-demo ~$ kubectl scale deployment vllm-demo --replicas=1
 
 ---
 
-## 08 - DCGM GPU metrics (run with 07)
+## 07 - DCGM GPU metrics (run with 06)
 
 ```
 core@flatcar-gpu-demo ~$ DCGM_POD_IP=$(kubectl get pods -n gpu-operator -l app=nvidia-dcgm-exporter -o jsonpath='{.items[0].status.podIP}')
@@ -179,7 +192,7 @@ core@flatcar-gpu-demo ~$ watch -n1 "curl -s http://${DCGM_POD_IP}:9400/metrics |
 
 ---
 
-## 09 - Triton inference
+## 08 - Triton inference
 
 ```
 core@flatcar-gpu-demo ~$ kubectl apply -f triton-demo.yaml      # server + client in one apply
@@ -195,32 +208,11 @@ core@flatcar-gpu-demo ~$ kubectl delete job triton-classify && kubectl apply -f 
 
 ---
 
-## 06 - Driver upgrade in place (separate instance)
-
-```
-$ AWS_PROFILE=<name> ./run.sh      # create a second, older instance (billed)
-$ ./demo-tmux.sh                   # launch + SSH in two panes
-```
-
-On the node:
-
-```
-core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
-core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 570 branch
-core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -status
-core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -update      # updates and reboots
-# SSH back in after reboot:
-core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
-core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 580 branch
-```
-
----
-
 ## Teardown (stop AWS billing)
 
 ```
-$ cd 05-nvidia-driver-on-flatcar-aws && ./teardown.sh
-$ cd 06-nvidia-driver-upgrade-in-place && ./teardown.sh
+$ cd 04-nvidia-driver-on-flatcar-aws && ./teardown.sh
+$ cd 05-nvidia-driver-upgrade-in-place && ./teardown.sh
 ```
 
 ---

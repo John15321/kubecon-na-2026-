@@ -19,7 +19,10 @@ exec 3>&- 3<&- 2>/dev/null || true
 sleep 2
 
 echo
-echo "Ready. SSH in with:"
+echo "Ready. SSH in as either user with:"
 echo "  ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 core@localhost"
+echo "  ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 demo@localhost"
+echo
+echo "Ignition wired up the hostname, the demo user, and the hello-world container on boot."
 echo
 exec "${SHELL:-bash}"

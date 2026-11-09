@@ -24,10 +24,10 @@ boot: "First boot, in the initramfs" {
   grid-gap: 16
   users: "users: core, demo" {class: flatcar; width: 400; height: 80}
   files: "files: hostname, welcome.sh" {class: flatcar; width: 400; height: 80}
-  units: "units: hello-world, nginx" {class: flatcar; width: 400; height: 80}
+  units: "unit: hello-world" {class: flatcar; width: 400; height: 80}
 }
 
-up: "systemd starts the units\nnginx serving on :8080" {class: navy; width: 330; height: 140}
+up: "systemd starts the units\nhello-world ran on boot" {class: navy; width: 330; height: 140}
 
 bu -> ign: "butane" {class: arrow}
 ign -> boot: "user-data" {class: arrow}

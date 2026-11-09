@@ -24,7 +24,12 @@ if [ -n "${D2_CMD}" ] && [ -d assets/diagrams ]; then
         [ -f "$src" ] || continue
         out="${src%.d2}.svg"
         echo "🖼️  d2: ${src} → ${out}"
-        "${D2_CMD}" --theme 0 "$src" "$out" > /dev/null
+        "${D2_CMD}" --theme 0 \
+            --font-regular assets/fonts/Overpass-Regular.ttf \
+            --font-italic assets/fonts/Overpass-Italic.ttf \
+            --font-semibold assets/fonts/Overpass-SemiBold.ttf \
+            --font-bold assets/fonts/Overpass-Bold.ttf \
+            "$src" "$out" > /dev/null
         # Lift connection labels above their arrows instead of over them.
         if command -v python3 > /dev/null 2>&1; then
             python3 scripts/d2-labels-above.py "$out"
