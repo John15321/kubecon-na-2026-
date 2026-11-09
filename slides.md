@@ -465,43 +465,11 @@ Every commit runs the full test suite: unit, integration, and product tests acro
 
 ---
 
-<!-- _class: demo -->
+<!-- _class: section -->
 
-<p class="demo-kicker">Live demo · 01</p>
+# Demos!
 
-# Flatcar on QEMU
-
-<div class="demo-grid">
-<div>
-
-<p class="demo-label">Watch for</p>
-
-- No installer: the disk image <strong>is</strong> the OS
-- Login prompt in seconds
-- SSH works with a key Ignition put there
-
-</div>
-<div class="demo-term">
-<span class="demo-path">demos/01-getting-started-on-flatcar-on-qemu</span>
-<code>$ ./demo-tmux.sh</code>
-<code class="c"># right pane, once sshd is up:</code>
-<code>$ ssh -i ssh/demo_ed25519 \</code>
-<code>    -p 2222 core@localhost</code>
-<code>$ cat /etc/os-release</code>
-</div>
-</div>
-
-<!--
-Before we prove the nginx story, let's start smaller: a config whose only content is one SSH public key.
-
-Switch to the terminal. Left pane is the serial console, right pane waits for sshd.
-
-While it boots, say: there is no installer step. We downloaded a disk image, handed QEMU a config, and that is the whole procedure. The same image boots on every cloud on the earlier logo slide.
-
-Payoff: SSH in with the key from the config, cat /etc/os-release. Nobody typed a password, nobody clicked through a wizard.
-
-Fallback if the VM won't boot: asciinema play demo.cast in the same folder.
--->
+## Let's see it running
 
 ---
 
@@ -509,7 +477,7 @@ Fallback if the VM won't boot: asciinema play demo.cast in the same folder.
 
 <p class="lede">Ignition runs <strong>once</strong>, in the initramfs, <strong>before</strong> the real system starts. Users, files, and units already exist when systemd comes up.</p>
 
-<img class="diagram" style="height: 400px" src="assets/diagrams/ignition-first-boot.svg" alt="config.bu is transpiled by butane into config.ign, handed over as user-data; on first boot Ignition creates users, files and systemd units in the initramfs, then systemd starts the units and nginx serves on port 8080">
+<img class="diagram" style="height: 400px" src="assets/diagrams/ignition-first-boot.svg" alt="config.bu is transpiled by butane into config.ign, handed over as user-data; on first boot Ignition creates users, files and systemd units in the initramfs, then systemd starts the units and the hello-world container runs">
 
 <div class="legend"><span class="lg-yours">Your config</span><span class="lg-flatcar">Applied by Ignition</span><span class="lg-k8s">Running system</span></div>
 
@@ -520,45 +488,50 @@ Walk the diagram left to right: Butane is what you write and review in Git. buta
 
 If Ignition fails, the boot fails. That is a feature: a machine never comes up silently wrong.
 
-Next demo: the same QEMU VM, but the config now does real work.
+Next: watch it happen on a real VM.
 -->
 
 ---
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 02</p>
+<p class="demo-kicker">Live demo · 01</p>
 
-# Ignition doing real first-boot work
+# Hello world, from a config
 
 <div class="demo-grid">
 <div>
 
 <p class="demo-label">Watch for</p>
 
-- Hostname and a second user, set declaratively
-- Containers running before anyone logs in
-- nginx reachable from the laptop on <code>:8080</code>
+- No installer: the disk image <strong>is</strong> the OS
+- Hostname, user and script set by Ignition
+- <code>hello-world</code> ran before anyone logged in
+- <code>/usr</code> is read-only
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/02-ignition-first-boot-setup</span>
+<span class="demo-path">demos/01-getting-started-on-flatcar-on-qemu</span>
 <code>$ ./demo-tmux.sh</code>
-<code>$ hostname</code>
-<code>$ groups demo</code>
-<code>$ docker ps</code>
+<code class="c"># right pane, once sshd is up:</code>
+<code>$ ssh -i ssh/demo_ed25519 \</code>
+<code>    -p 2222 core@localhost</code>
 <code>$ journalctl -u hello-world.service</code>
-<code class="c"># back on the laptop:</code>
-<code>$ curl http://localhost:8080</code>
+<code>$ /opt/bin/welcome.sh</code>
+<code>$ sudo touch /usr/test</code>
 </div>
 </div>
 
 <!--
-Before switching, show config.bu briefly in the editor: two users, two files, two units. That is everything this machine will ever be told.
+Show config.bu briefly in the editor: two users, a hostname, a welcome script and one unit. That is everything this machine will ever be told.
 
-While it boots: the VM runs with -snapshot, so every run is a genuine first boot. What you see is Ignition doing the work live, not a pre-baked image.
+Switch to the terminal. Left pane is the serial console, right pane waits for sshd. While it boots, say: there is no installer step. We downloaded a disk image, handed QEMU a config, and that is the whole procedure. The VM runs with -snapshot, so every run is a genuine first boot.
 
-Payoff: curl localhost:8080 from the laptop. No login, no setup, the machine came up already doing its job. Point back at the "It came up serving" slide.
+Payoff 1: SSH in with the key from the config. journalctl -u hello-world.service shows the container already ran at boot, and /opt/bin/welcome.sh is the script Ignition staged. Nobody logged in to set any of it up.
+
+Payoff 2: the OS is immutable. sudo touch /usr/test fails with "Read-only file system". Config and data live in /etc and /var, which stay writable.
+
+Fallback: none recorded, rerun ./demo-tmux.sh (boots in seconds once the image is cached).
 -->
 
 ---
@@ -587,7 +560,7 @@ We use Kubernetes as the example because it is the extension this audience cares
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 03</p>
+<p class="demo-kicker">Live demo · 02</p>
 
 # Adding Kubernetes with a sysext
 
@@ -602,7 +575,7 @@ We use Kubernetes as the example because it is the extension this audience cares
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/03-system-extensions</span>
+<span class="demo-path">demos/02-system-extensions</span>
 <code>$ ./demo-tmux.sh</code>
 <code>$ systemd-sysext status</code>
 <code>$ which kubeadm kubelet kubectl</code>
@@ -647,7 +620,7 @@ Pinned versions, for the curious: Kubernetes v1.37.1 (v1.37.2 crashes on start),
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 04</p>
+<p class="demo-kicker">Live demo · 03</p>
 
 # Kubernetes on Flatcar
 
@@ -662,7 +635,7 @@ Pinned versions, for the curious: Kubernetes v1.37.1 (v1.37.2 crashes on start),
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/04-deploy-kubernetes-with-flatcar</span>
+<span class="demo-path">demos/03-deploy-kubernetes-with-flatcar</span>
 <code>$ ./reset.sh && ./demo-tmux.sh</code>
 <code>$ kubectl get nodes</code>
 <code class="c"># NotReady: no CNI yet</code>
@@ -737,7 +710,7 @@ This demo runs on a real AWS g4dn.xlarge with an NVIDIA T4.
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 05</p>
+<p class="demo-kicker">Live demo · 04</p>
 
 # A GPU node on AWS
 
@@ -752,7 +725,7 @@ This demo runs on a real AWS g4dn.xlarge with an NVIDIA T4.
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/05-nvidia-driver-on-flatcar-aws</span>
+<span class="demo-path">demos/04-nvidia-driver-on-flatcar-aws</span>
 <code>$ ./demo-tmux.sh</code>
 <code>$ systemd-sysext status</code>
 <code>$ nvidia-smi</code>
@@ -768,7 +741,7 @@ This demo runs on a real AWS g4dn.xlarge with an NVIDIA T4.
 <!--
 Start this instance BEFORE the talk with AWS_PROFILE=<name> ./run.sh. Boot plus kubeadm takes minutes, and run.sh reuses a running instance, so demo-tmux.sh on stage just reattaches.
 
-This is real, billed infrastructure (about $0.53/hr). The same instance serves demos 07, 08 and 09. Tear it down after the talk with ./teardown.sh in this folder.
+This is real, billed infrastructure (about $0.53/hr). The same instance serves demos 06, 07 and 08. Tear it down after the talk with ./teardown.sh in this folder.
 
 Payoff 1: nvidia-smi on the host, right after boot. Nobody installed a driver.
 Payoff 2: the gpu-test pod prints the same nvidia-smi table from inside a container, which proves the device plugin and toolkit wiring.
@@ -798,7 +771,7 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 06</p>
+<p class="demo-kicker">Live demo · 05</p>
 
 # NVIDIA driver upgrade in place
 
@@ -813,7 +786,7 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/06-nvidia-driver-upgrade-in-place</span>
+<span class="demo-path">demos/05-nvidia-driver-upgrade-in-place</span>
 <code>$ ./demo-tmux.sh</code>
 <code>$ systemd-sysext status</code>
 <code>$ nvidia-smi</code>
@@ -826,7 +799,7 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 </div>
 
 <!--
-This is a SECOND, separate billed instance on an older Flatcar build, so there is a version gap to cross. It does not touch demo 05's cluster. Start it before the talk, and run ./teardown.sh in this folder afterwards.
+This is a SECOND, separate billed instance on an older Flatcar build, so there is a version gap to cross. It does not touch demo 04's cluster. Start it before the talk, and run ./teardown.sh in this folder afterwards.
 
 While the update downloads and the node reboots, go back to the previous slide: the active slot is about to flip from A to B.
 
@@ -857,7 +830,7 @@ Model: Qwen2.5-0.5B-Instruct. Small on purpose, so it downloads in a demo-friend
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 07</p>
+<p class="demo-kicker">Live demo · 06</p>
 
 # vLLM inference on Flatcar
 
@@ -872,7 +845,7 @@ Model: Qwen2.5-0.5B-Instruct. Small on purpose, so it downloads in a demo-friend
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/07-vllm-inference-on-flatcar</span>
+<span class="demo-path">demos/06-vllm-inference-on-flatcar</span>
 <code>$ kubectl apply -f vllm-demo.yaml</code>
 <code>$ kubectl get pods -w</code>
 <code>$ CLUSTER_IP=$(kubectl get svc vllm-demo \</code>
@@ -920,7 +893,7 @@ One tuning note: we set the exporter interval to 2s for the demo. The default is
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 08</p>
+<p class="demo-kicker">Live demo · 07</p>
 
 # GPU metrics with DCGM
 
@@ -935,7 +908,7 @@ One tuning note: we set the exporter interval to 2s for the demo. The default is
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/08-dcgm-metrics-demo</span>
+<span class="demo-path">demos/07-dcgm-metrics-demo</span>
 <code>$ ./demo-tmux.sh</code>
 <code class="c"># pane A: the curl loop against vLLM</code>
 <code>$ while true; do curl -s ... ; sleep 2; done</code>
@@ -946,7 +919,7 @@ One tuning note: we set the exporter interval to 2s for the demo. The default is
 </div>
 
 <!--
-Precondition: demo 07's vLLM is Running. Set DCGM_POD_IP and CLUSTER_IP first; both commands are in COMMANDS.md.
+Precondition: demo 06's vLLM is Running. Set DCGM_POD_IP and CLUSTER_IP first; both commands are in COMMANDS.md.
 
 Start pane B first so the audience sees the idle baseline, then start the loop in pane A.
 
@@ -977,7 +950,7 @@ Why the client is a Job, not a curl: Triton wants a raw tensor matching the mode
 
 <!-- _class: demo -->
 
-<p class="demo-kicker">Live demo · 09 (optional)</p>
+<p class="demo-kicker">Live demo · 08 (optional)</p>
 
 # Triton inference on Flatcar
 
@@ -992,7 +965,7 @@ Why the client is a Job, not a curl: Triton wants a raw tensor matching the mode
 
 </div>
 <div class="demo-term">
-<span class="demo-path">demos/09-triton-inference-on-flatcar</span>
+<span class="demo-path">demos/08-triton-inference-on-flatcar</span>
 <code>$ kubectl apply -f triton-demo.yaml</code>
 <code>$ kubectl get pods -w</code>
 <code>$ kubectl logs job/triton-classify</code>
@@ -1007,7 +980,7 @@ The score printed is a raw logit, not a probability, so values above 1 are norma
 
 To re-run the client: kubectl delete job triton-classify && kubectl apply -f triton-demo.yaml.
 
-After the talk: run ./teardown.sh in demos/05 (and demos/06) to stop AWS billing.
+After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing.
 -->
 
 ---
@@ -1064,7 +1037,7 @@ After the talk: run ./teardown.sh in demos/05 (and demos/06) to stop AWS billing
 <p class="closing-links">
   <a href="https://flatcar.org"><img src="assets/logos/flatcar-logotype/icon/white/flatcar-icon-white.svg" alt=""> flatcar.org</a>
   <a href="https://github.com/flatcar"><img src="assets/logos/external/github-white.png" alt=""> github.com/flatcar</a>
-  <a href="https://discord.gg/PMYjFUsJyq"><img src="assets/logos/external/discord-white.svg" alt=""> discord.gg/PMYjFUsJyq</a>
+  <a href="https://chat.flatcar.org"><img src="assets/logos/external/discord-white.svg" alt=""> chat.flatcar.org</a>
 </p>
 
 <p class="closing-meetings">

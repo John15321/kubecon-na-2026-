@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 #
-# 01 - Boot Flatcar Container Linux under QEMU.
+# 01 - Boot Flatcar with Ignition doing real first-boot work.
+#
+# config.bu sets the hostname, adds a second user, stages a welcome script
+# on disk, and defines a oneshot systemd unit that runs the hello-world
+# container on boot. Nothing here is done by hand after boot; Ignition wires
+# it all up. The OS itself stays read-only, which the demo shows too.
 #
 # Steps:
 #   1. Download Flatcar's QEMU wrapper script and disk image (cached after
@@ -50,7 +55,8 @@ fi
 
 # --- 2. Throwaway SSH keypair for this demo --------------------------------
 # Keep personal keys out of the committed Ignition config. This keypair
-# lives under ssh/ (gitignored); only its public half is substituted in.
+# lives under ssh/ (gitignored); only its public half is substituted in,
+# for both the core and demo users.
 if [[ ! -f "$SSH_KEY" ]]; then
     echo "==> Generating a throwaway SSH keypair for this demo"
     mkdir -p "$SSH_KEY_DIR"
@@ -67,10 +73,14 @@ sed "s#__SSH_PUBLIC_KEY__#${SSH_PUBLIC_KEY}#" "$BUTANE_TEMPLATE" \
     > "$IGNITION_CONFIG"
 
 # --- 4. Boot ----------------------------------------------------------------
-# The wrapper script delivers the Ignition config to QEMU via -i.
-# -nographic keeps boot output on this terminal. Ctrl-A X quits QEMU.
+# -nographic keeps boot output on this terminal. -snapshot discards disk writes on exit, so
+# every run is a clean first boot and Ignition re-provisions from scratch.
+# Ctrl-A X quits QEMU.
 echo "==> Booting Flatcar (Ctrl-A X to quit QEMU)"
-echo "    Once you see a login prompt, SSH in from another terminal with:"
-echo "      ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 core@localhost"
+echo "    hello-world runs automatically once Ignition finishes."
+echo "    Once you see a login prompt:"
+echo "      - SSH in from another terminal (as core or demo):"
+echo "          ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 core@localhost"
+echo "          ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 demo@localhost"
 echo
-./"$WRAPPER" -i "$IGNITION_CONFIG" -- -nographic
+./"$WRAPPER" -i "$IGNITION_CONFIG" -- -nographic -snapshot
