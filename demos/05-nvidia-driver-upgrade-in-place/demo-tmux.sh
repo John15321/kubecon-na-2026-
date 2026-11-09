@@ -5,7 +5,7 @@
 #
 # Top pane:    run.sh (launches this folder's own instance, prints its IP)
 # Bottom pane: waits for sshd, then gives you a prompt to type ssh and the
-#              update_engine walkthrough live.
+#              in-place sysext-swap walkthrough live.
 #
 # Record with:
 #   asciinema rec demo.cast -c ./demo-tmux.sh

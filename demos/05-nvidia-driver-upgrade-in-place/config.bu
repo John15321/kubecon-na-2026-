@@ -7,9 +7,11 @@ passwd:
         - __SSH_PUBLIC_KEY__
 storage:
   files:
-    # The 570 branch, not 580: this instance boots Flatcar alpha 4820.0.1,
-    # the last build before branch 580 was added. The demo updates this
-    # instance to the current build and watches the driver flip to 580.
+    # Pinned to the 570 branch, not 580: this instance boots Flatcar alpha
+    # 4865.0.0, which publishes both nvidia-drivers-570-open and
+    # nvidia-drivers-580-open for this same build/kernel. The demo swaps
+    # this file to 580-open in place (same OS build, no update_engine) and
+    # reboots to watch the driver flip.
     - path: /etc/flatcar/enabled-sysext.conf
       mode: 0644
       contents:

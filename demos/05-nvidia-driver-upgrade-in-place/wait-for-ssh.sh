@@ -31,7 +31,7 @@ echo
 echo "Ready. SSH in with:"
 echo "  ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@${PUBLIC_IP}"
 echo
-echo "This instance booted on Flatcar alpha 4820.0.1 with nvidia-drivers-570-open."
-echo "See README.md for the update_engine walkthrough to upgrade it to current (4865.0.0 / 580-open) live."
+echo "This instance booted on Flatcar alpha 4865.0.0 with nvidia-drivers-570-open (pinned at boot)."
+echo "See README.md for the in-place sysext swap to nvidia-drivers-580-open, live, on this same build."
 echo
 exec "${SHELL:-bash}"

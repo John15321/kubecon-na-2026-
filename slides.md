@@ -759,20 +759,20 @@ If time is short, have the GPU Operator installed beforehand and only show kubec
 
 ---
 
-# Driver upgrades ride the OS update
+# The driver branch is a sysext selection
 
-<p class="lede">The driver is built <strong>with</strong> the kernel, so it is upgraded <strong>with</strong> the OS: one atomic A/B update. If the new driver misbehaves, reboot into the old slot.</p>
+<p class="lede">The driver ships as a <strong>systemd-sysext</strong>, built against a specific OS build/kernel. One build can publish several driver branches side by side. Which one is active is just a config file: no OS update needed to flip it.</p>
 
-<img class="diagram" style="height: 390px" src="assets/diagrams/driver-upgrade.svg" alt="Before: Flatcar 4820.0.1 with USR-A active holding kernel and driver 570-open. update_engine writes USR-B and reboots. After: Flatcar 4865.0.0 with USR-B active holding kernel and driver 580-open, USR-A kept as rollback">
+<img class="diagram" style="height: 390px" src="assets/diagrams/driver-upgrade.svg" alt="Before: Flatcar 4865.0.0 with the 570-open driver sysext merged and 580-open available but not merged. Editing /etc/flatcar/enabled-sysext.conf and rebooting flips which one is merged. After reboot: Flatcar 4865.0.0, same build, with 580-open now merged and 570-open available but not merged.">
 
-<div class="legend"><span class="lg-flatcar">Active slot</span><span class="lg-yours">Passive / rollback slot</span></div>
+<div class="legend"><span class="lg-flatcar">Merged (active)</span><span class="lg-yours">Available, not merged</span></div>
 
 <!--
-Talk track: connect this to the A/B slide from earlier. Nothing new is being invented for GPUs: the driver simply rides along with the normal OS update.
+Talk track: this is NOT the A/B update from earlier. Same Flatcar build, same boot, before and after.
 
-There is no moment where the new kernel boots with the old driver, because they arrive in the same image. And the old pair stays on disk in the other slot, which is your rollback.
+Flatcar alpha 4865.0.0 publishes both nvidia-drivers-570-open and nvidia-drivers-580-open for its own kernel. /etc/flatcar/enabled-sysext.conf picks which one systemd-sysext merges into /usr. Edit that file and reboot, and the merged one changes -- no update_engine, no version bump.
 
-Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updated to 4865.0.0 with 580-open.
+Concretely, in this demo: Flatcar alpha 4865.0.0 throughout, driver branch 570-open swapped in place to 580-open.
 -->
 
 ---
@@ -789,8 +789,8 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 <p class="demo-label">Watch for</p>
 
 - Before: driver branch <strong>570-open</strong>
-- One command: download, apply, reboot
-- After: <strong>580-open</strong>, config untouched
+- One edit + reboot, same OS build throughout
+- After: <strong>580-open</strong>, no OS update involved
 
 </div>
 <div class="demo-term">
@@ -798,8 +798,9 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 <code>$ ./demo-tmux.sh</code>
 <code>$ systemd-sysext status</code>
 <code>$ nvidia-smi</code>
-<code>$ update_engine_client -status</code>
-<code>$ update_engine_client -update</code>
+<code>$ cat /etc/flatcar/enabled-sysext.conf</code>
+<code>$ sudo sed -i 's/570-open/580-open/' /etc/flatcar/enabled-sysext.conf</code>
+<code>$ sudo systemctl reboot</code>
 <code class="c"># reboots, SSH back in with the same key</code>
 <code>$ systemd-sysext status</code>
 <code>$ nvidia-smi</code>
@@ -807,11 +808,11 @@ Concretely, in this demo: Flatcar alpha 4820.0.1 with the 570-open branch, updat
 </div>
 
 <!--
-This is a SECOND, separate billed instance on an older Flatcar build, so there is a version gap to cross. It does not touch demo 04's cluster. Start it before the talk, and run ./teardown.sh in this folder afterwards.
+This is a SECOND, separate billed instance, pinned to 570-open at boot via Ignition. It does not touch demo 04's cluster. Start it before the talk, and run ./teardown.sh in this folder afterwards.
 
-While the update downloads and the node reboots, go back to the previous slide: the active slot is about to flip from A to B.
+While the sysext merges and the node reboots, go back to the previous slide: same OS build box on both sides, only which sysext is merged changes.
 
-Payoff: same nvidia-smi command, new driver version, and we never touched a driver package.
+Payoff: same nvidia-smi command, new driver version, same Flatcar build the whole time -- this is NOT an OS update.
 
 If you are short on time, move this demo to the end; nothing else depends on it.
 -->
@@ -997,7 +998,9 @@ After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing
 
 # Try it yourself
 
-## github.com/flatcar/flatcar-demos
+## github.com/flatcar/flatcar-demo
+
+<p class="muted" style="font-size: 20px; margin: -28px 0 36px 0;">in the <code>kubecon-cloudnativecon-na-2026</code> folder</p>
 
 <div class="cols-3" style="align-items: start; gap: 40px; font-size: 22px; line-height: 1.5; margin-top: 8px">
 
@@ -1006,9 +1009,8 @@ After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing
 **Local, QEMU, free**
 
 - 01 Flatcar on QEMU
-- 02 Ignition first boot
-- 03 System extensions
-- 04 Kubernetes
+- 02 System extensions
+- 03 Kubernetes
 
 </div>
 
@@ -1016,8 +1018,8 @@ After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing
 
 **AWS, NVIDIA T4**
 
-- 05 GPU node
-- 06 Driver upgrade in place
+- 04 GPU node
+- 05 Driver upgrade in place
 
 </div>
 
@@ -1025,9 +1027,9 @@ After the talk: run ./teardown.sh in demos/04 (and demos/05) to stop AWS billing
 
 **GPU workloads**
 
-- 07 vLLM inference
-- 08 DCGM metrics
-- 09 Triton inference
+- 06 vLLM inference
+- 07 DCGM metrics
+- 08 Triton inference
 
 </div>
 
