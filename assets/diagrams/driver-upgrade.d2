@@ -14,20 +14,20 @@ classes: {
 
 direction: right
 
-before: "Before: Flatcar 4820.0.1" {
+before: "Before: Flatcar 4865.0.0" {
   class: group
   grid-columns: 1
   grid-gap: 16
-  a: "USR-A  active\nkernel + driver 570-open" {class: active; width: 420; height: 110}
-  b: "USR-B  passive\nprevious image" {class: idle; width: 420; height: 110}
+  a: "570-open  active\nmerged via sysext" {class: active; width: 420; height: 110}
+  b: "580-open  available\nnot merged" {class: idle; width: 420; height: 110}
 }
 
 after: "After reboot: Flatcar 4865.0.0" {
   class: group
   grid-columns: 1
   grid-gap: 16
-  a: "USR-A  rollback\nkernel + driver 570-open" {class: idle; width: 420; height: 110}
-  b: "USR-B  active\nkernel + driver 580-open" {class: active; width: 420; height: 110}
+  a: "570-open  available\nnot merged" {class: idle; width: 420; height: 110}
+  b: "580-open  active\nmerged via sysext" {class: active; width: 420; height: 110}
 }
 
-before -> after: "update_engine\nwrites B, reboots" {class: arrow}
+before -> after: "edit sysext.conf\nreboot, same build" {class: arrow}
