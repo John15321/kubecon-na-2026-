@@ -36,4 +36,11 @@ echo
 echo "kubeadm init may still be running in the launch pane."
 echo "kubectl get nodes works once it finishes; NotReady until you apply a CNI."
 echo
+
+# AUTO_SSH=1: skip typing the command above live and connect directly.
+# Useful when re-recording a take against an instance that's already up.
+if [[ "${AUTO_SSH:-0}" == "1" ]]; then
+    exec ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "core@${PUBLIC_IP}"
+fi
+
 exec "${SHELL:-bash}"

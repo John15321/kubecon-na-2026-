@@ -53,18 +53,12 @@ command -v ssh-keygen >/dev/null || { echo "ssh-keygen not found"; exit 1; }
 # Show which account, identity, and region is about to be used, before
 # anything is created. This catches a wrong AWS profile before it bills.
 echo "==> AWS identity check (profile: ${AWS_PROFILE:-default})"
-if PROFILES="$(aws configure list-profiles 2>/dev/null)"; then
-    echo "    Configured profiles: $(echo "$PROFILES" | paste -sd, -)"
-fi
-CALLER_IDENTITY="$(aws sts get-caller-identity --output json)" || {
+aws sts get-caller-identity --output json >/dev/null || {
     echo "Could not call 'aws sts get-caller-identity' -- check your credentials/profile" >&2
     echo "(set AWS_PROFILE=<name> to pick a specific one, e.g. AWS_PROFILE=kubecon-demo ./run.sh)" >&2
     exit 1
 }
-ACCOUNT_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Account'])" < "$CALLER_IDENTITY")"
-CALLER_ARN="$(python3 -c "import json,sys;print(json.load(sys.stdin)['Arn'])" < "$CALLER_IDENTITY")"
-echo "    Account:  ${ACCOUNT_ID}"
-echo "    Identity: ${CALLER_ARN}"
+echo "    Credentials OK."
 echo "    Region:   ${REGION}"
 
 # --- Resume if already provisioned -----------------------------------------
@@ -120,9 +114,13 @@ if [[ -z "$SG_ID" || "$SG_ID" == "None" ]]; then
     echo "==> Creating security group '${SG_NAME}' (SSH from ${MY_IP} only)"
     SG_ID="$(aws ec2 create-security-group --region "$REGION" --group-name "$SG_NAME" \
         --description "flatcar-gpu-demo: SSH only" --vpc-id "$VPC_ID" --query 'GroupId' --output text)"
-    aws ec2 authorize-security-group-ingress --region "$REGION" --group-id "$SG_ID" \
-        --protocol tcp --port 22 --cidr "$MY_IP" >/dev/null
 fi
+# Always reconcile the current IP, even when the group already existed from
+# an earlier run: it may have been authorized for a different IP (home vs.
+# venue Wi-Fi, VPN, etc.), which would otherwise silently time out SSH.
+# Ignore "already exists" if this IP is already authorized.
+aws ec2 authorize-security-group-ingress --region "$REGION" --group-id "$SG_ID" \
+    --protocol tcp --port 22 --cidr "$MY_IP" >/dev/null 2>&1 || true
 
 # --- 5. Launch ---------------------------------------------------------------
 SPOT_ARGS=()
@@ -132,7 +130,7 @@ if [[ "${SPOT:-0}" == "1" ]]; then
 fi
 
 echo "==> About to launch ${INSTANCE_TYPE} (${AMI_ID}) in ${REGION}"
-echo "    under account ${ACCOUNT_ID} (${CALLER_ARN}), profile '${AWS_PROFILE:-default}'."
+echo "    under profile '${AWS_PROFILE:-default}'."
 echo "    Billing starts on confirmation (~\$0.53/hr on-demand for g4dn.xlarge). Run ./teardown.sh when done."
 if [[ "${AWS_SKIP_CONFIRM:-0}" != "1" ]]; then
     read -r -p "    Proceed? [y/N] " REPLY

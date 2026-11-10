@@ -83,13 +83,17 @@ prompt. `tmux kill-session -t flatcar-nvidia-demo` kills a stuck session.
    - `--timeout 10m`: the first install pulls several images. A `context
      deadline exceeded` message means `--wait` timed out, not that the
      install failed. Check `kubectl get pods -n gpu-operator`.
-6. Confirm a pod can see the GPU:
+6. Confirm a pod can see the GPU. `gpu-test.yaml` is already staged on the
+   node by `config.bu`, so no copy step is needed:
    ```
-   kubectl run gpu-test --rm --restart=Never \
-     --image=nvidia/cuda:12.6.0-base-ubuntu24.04 \
-     --overrides='{"spec":{"containers":[{"name":"gpu-test","image":"nvidia/cuda:12.6.0-base-ubuntu24.04","command":["nvidia-smi"],"resources":{"limits":{"nvidia.com/gpu":"1"}}}]}}' \
-     -- nvidia-smi
+   kubectl apply -f gpu-test.yaml
+   kubectl logs -f gpu-test       # streams nvidia-smi output, returns when the pod finishes
+   kubectl delete -f gpu-test.yaml
    ```
+   (`kubectl run ... --overrides=<json>` works too, but this kubectl's
+   `run` dropped `--limits`/`--requests`, so `--overrides` is a JSON blob
+   that's not presentation-friendly to type live -- the YAML file is the
+   same thing, shown instead of typed.)
 7. Show the GPU labels the Operator applied automatically:
    ```
    kubectl get node --show-labels | tr ',' '\n' | grep -i nvidia
@@ -109,10 +113,11 @@ prompt. `tmux kill-session -t flatcar-nvidia-demo` kills a stuck session.
 
 ## Notes
 
-- `config.bu` is the Butane source shown on stage. It stages
-  `vllm-demo.yaml` (folder 06) and `triton-demo.yaml` (folder 08) onto the
-  node, so those folders' `kubectl apply` commands need no copy step. Keep
-  those inline copies in sync with the folders' own files by hand.
+- `config.bu` is the Butane source shown on stage. It stages this folder's
+  own `gpu-test.yaml`, `vllm-demo.yaml` (folder 06), and `triton-demo.yaml`
+  (folder 08) onto the node, so those `kubectl apply` commands need no copy
+  step. Keep those inline copies in sync with the folders' own files by
+  hand.
 - `ssh/aws-state.json` (gitignored) records the instance id, security
   group, key name, and region for `wait-for-ssh.sh` and `teardown.sh`.
 - The AMI id is specific to `us-east-1`. Re-resolve it for another region.

@@ -29,6 +29,26 @@ storage:
       mode: 0644
       contents:
         inline: flatcar-gpu-demo
+    # Staged on disk so this folder's own `kubectl apply -f gpu-test.yaml`
+    # needs no copy step. Keep this in sync by hand with this folder's own
+    # gpu-test.yaml.
+    - path: /home/core/gpu-test.yaml
+      mode: 0644
+      contents:
+        inline: |
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: gpu-test
+          spec:
+            restartPolicy: Never
+            containers:
+              - name: gpu-test
+                image: nvidia/cuda:12.6.0-base-ubuntu24.04
+                command: ["nvidia-smi"]
+                resources:
+                  limits:
+                    nvidia.com/gpu: "1"
     # Staged on disk so folder 06's `kubectl apply -f vllm-demo.yaml` needs
     # no copy step. Keep this in sync by hand with
     # 06-vllm-inference-on-flatcar/vllm-demo.yaml.
