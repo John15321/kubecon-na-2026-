@@ -34,4 +34,11 @@ echo
 echo "This instance booted on Flatcar alpha 4865.0.0 with nvidia-drivers-570-open (pinned at boot)."
 echo "See README.md for the in-place sysext swap to nvidia-drivers-580-open, live, on this same build."
 echo
+
+# AUTO_SSH=1: skip typing the command above live and connect directly.
+# Useful when re-recording a take against an instance that's already up.
+if [[ "${AUTO_SSH:-0}" == "1" ]]; then
+    exec ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "core@${PUBLIC_IP}"
+fi
+
 exec "${SHELL:-bash}"

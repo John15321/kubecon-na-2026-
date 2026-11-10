@@ -737,17 +737,20 @@ This demo runs on a real AWS g4dn.xlarge with an NVIDIA T4.
 <code>$ ./demo-tmux.sh</code>
 <code>$ systemd-sysext status</code>
 <code>$ nvidia-smi</code>
-<code class="c"># CNI + untaint, then (full flags: COMMANDS.md)</code>
+<code class="c"># apply the CNI, untaint the control plane, then</code>
 <code>$ helm install gpu-operator nvidia/gpu-operator \</code>
 <code>    --set driver.enabled=false \</code>
 <code>    --set toolkit.enabled=false</code>
 <code>$ kubectl get pods -n gpu-operator</code>
-<code>$ kubectl run gpu-test ... -- nvidia-smi</code>
+<code>$ kubectl apply -f gpu-test.yaml</code>
+<code>$ kubectl logs -f gpu-test</code>
 </div>
 </div>
 
 <!--
 Start this instance BEFORE the talk with AWS_PROFILE=<name> ./run.sh. Boot plus kubeadm takes minutes, and run.sh reuses a running instance, so demo-tmux.sh on stage just reattaches.
+
+gpu-test.yaml is staged on the node by config.bu (same pattern as vllm-demo.yaml/triton-demo.yaml), so this is a plain apply, not a typed --overrides JSON blob.
 
 This is real, billed infrastructure (about $0.53/hr). The same instance serves demos 06, 07 and 08. Tear it down after the talk with ./teardown.sh in this folder.
 
