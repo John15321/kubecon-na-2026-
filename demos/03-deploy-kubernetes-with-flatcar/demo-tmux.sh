@@ -18,8 +18,15 @@ SESSION="flatcar-k8s-demo"
 
 tmux kill-session -t "$SESSION" 2>/dev/null || true
 
-tmux new-session -d -s "$SESSION" -x 220 -y 50 './run.sh'
-tmux split-window -v -t "$SESSION" './wait-for-ssh.sh'
+# -e passes PRESENTATION_MODE into the new panes explicitly: if a tmux
+# server was already running from before this shell set it, panes would
+# otherwise inherit the server's original (stale) environment instead.
+tmux new-session -d -s "$SESSION" -x 220 -y 50 \
+    -e "PRESENTATION_MODE=${PRESENTATION_MODE:-}" \
+    './run.sh'
+tmux split-window -v -t "$SESSION" \
+    -e "PRESENTATION_MODE=${PRESENTATION_MODE:-}" \
+    './wait-for-ssh.sh'
 
 tmux set-option -t "$SESSION" -g pane-border-status top
 tmux set-option -t "$SESSION" -g pane-border-format "#{pane_title}"

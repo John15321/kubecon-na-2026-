@@ -110,13 +110,12 @@ core@flatcar-gpu-demo ~$ helm install gpu-operator --wait --timeout 10m \
 core@flatcar-gpu-demo ~$ kubectl get pods -n gpu-operator
 ```
 
-Confirm a pod can see the GPU:
+Confirm a pod can see the GPU (`gpu-test.yaml` is already staged on the node):
 
 ```
-core@flatcar-gpu-demo ~$ kubectl run gpu-test --rm --restart=Never \
-    --image=nvidia/cuda:12.6.0-base-ubuntu24.04 \
-    --overrides='{"spec":{"containers":[{"name":"gpu-test","image":"nvidia/cuda:12.6.0-base-ubuntu24.04","command":["nvidia-smi"],"resources":{"limits":{"nvidia.com/gpu":"1"}}}]}}' \
-    -- nvidia-smi
+core@flatcar-gpu-demo ~$ kubectl apply -f gpu-test.yaml
+core@flatcar-gpu-demo ~$ kubectl logs -f gpu-test
+core@flatcar-gpu-demo ~$ kubectl delete -f gpu-test.yaml
 core@flatcar-gpu-demo ~$ kubectl get node --show-labels | tr ',' '\n' | grep -i nvidia
 ```
 
@@ -125,20 +124,21 @@ core@flatcar-gpu-demo ~$ kubectl get node --show-labels | tr ',' '\n' | grep -i 
 ## 05 - Driver upgrade in place (separate instance)
 
 ```
-$ AWS_PROFILE=<name> ./run.sh      # create a second, older instance (billed)
+$ AWS_PROFILE=<name> ./run.sh      # create a second instance, same build as 04 (billed)
 $ ./demo-tmux.sh                   # launch + SSH in two panes
 ```
 
-On the node:
+On the node (same Flatcar build, 4865.0.0, throughout -- no OS update):
 
 ```
 core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
-core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 570 branch
-core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -status
-core@flatcar-nvidia-upgrade-demo ~$ update_engine_client -update      # updates and reboots
-# SSH back in after reboot:
+core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 570-open
+core@flatcar-nvidia-upgrade-demo ~$ cat /etc/flatcar/enabled-sysext.conf
+core@flatcar-nvidia-upgrade-demo ~$ sudo sed -i 's/570-open/580-open/' /etc/flatcar/enabled-sysext.conf
+core@flatcar-nvidia-upgrade-demo ~$ sudo systemctl reboot
+# SSH back in after reboot (same key):
 core@flatcar-nvidia-upgrade-demo ~$ systemd-sysext status
-core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 580 branch
+core@flatcar-nvidia-upgrade-demo ~$ nvidia-smi                        # 580-open
 ```
 
 ---

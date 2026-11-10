@@ -15,12 +15,34 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 SESSION="flatcar-vllm-demo"
 tmux kill-session -t "$SESSION" 2>/dev/null || true
 
-tmux new-session -d -s "$SESSION" -x 220 -y 50 \
-    -e "AWS_PROFILE=${AWS_PROFILE:-}" -e "AWS_REGION=${AWS_REGION:-}" \
-    './wait-for-ssh.sh'
+# Set the pane's environment inside its own shell command rather than via
+# tmux's -e/global-environment mechanism, and explicitly unset AWS_PROFILE
+# rather than exporting it empty: the aws CLI treats an empty-but-present
+# AWS_PROFILE as "use profile named ''" (not "unset"), which fails with
+# "The config profile () could not be found" instead of falling back to
+# the default profile.
+if [[ -n "${AWS_PROFILE:-}" ]]; then
+    AWS_PROFILE_ENV="export AWS_PROFILE=$(printf '%q' "${AWS_PROFILE}"); "
+else
+    AWS_PROFILE_ENV="unset AWS_PROFILE; "
+fi
+SSH_ENV="${AWS_PROFILE_ENV}export AWS_REGION=$(printf '%q' "${AWS_REGION:-}") PRESENTATION_MODE=$(printf '%q' "${PRESENTATION_MODE:-}") AUTO_SSH=$(printf '%q' "${AUTO_SSH:-}"); "
+
+# If wait-for-ssh.sh fails, pause so its error (e.g. "bring up folder 04
+# first") stays on screen instead of this pane -- the only pane in the
+# only window -- vanishing the instant it exits, taking the whole session
+# with it. Baked into the pane's own command rather than a separate
+# `tmux set-option remain-on-exit` call after creation: this script's
+# failure path is a pure local file check with no network call, so it can
+# exit before a later, separate tmux command would even run -- a real
+# race, not a theoretical one. On success, wait-for-ssh.sh itself execs
+# into a shell/ssh session and never returns, so this wrapper never runs.
+ON_FAIL='rc=$?; if [ "$rc" -ne 0 ]; then echo; echo "[exited $rc] Press Enter to close this pane."; read -r _; fi; exit "$rc"'
+
+tmux new-session -d -s "$SESSION" -x 220 -y 50 "${SSH_ENV}./wait-for-ssh.sh; ${ON_FAIL}"
+tmux select-pane -t "${SESSION}:0.0" -T "vLLM demo (folder 04 instance)" 2>/dev/null || true
 
 tmux set-option -t "$SESSION" -g pane-border-status top
 tmux set-option -t "$SESSION" -g pane-border-format "#{pane_title}"
-tmux select-pane -t "${SESSION}:0.0" -T "vLLM demo (folder 04 instance)"
 
 tmux attach-session -t "$SESSION"
